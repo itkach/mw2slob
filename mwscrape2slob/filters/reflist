@@ -1,0 +1,5 @@
+.reflist
+.refbegin
+#References
+h2:empty
+a[href^="#cite"]

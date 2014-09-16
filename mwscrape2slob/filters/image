@@ -1,0 +1,4 @@
+img:not(.tex)
+.thumb
+.thumbcaption
+.thumbinner
