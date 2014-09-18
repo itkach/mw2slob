@@ -10,7 +10,7 @@ import re
 import sys
 import time
 
-from datetime import datetime
+from datetime import datetime, timedelta
 from urllib.parse import urlparse, quote
 
 import slob
@@ -138,19 +138,8 @@ class CouchArticleSource(collections.Sized):
 
         siteinfo_serialized = json.dumps(siteinfo, indent=2)
         slb.add(siteinfo_serialized.encode('utf-8'),
-                '_siteinfo.json',
+                '~/siteinfo.json',
                 content_type='application/json')
-
-
-        for name in ('shared.css',
-                     'mediawiki_shared.css',
-                     'mediawiki_monobook.css'):
-            key = '_css/'+name
-            slb.add(read_file('css/'+name), key, content_type=CSS)
-
-        for name in ('jquery-2.1.1.min.js', 'mathjax-config.js'):
-            key = '_js/'+name
-            slb.add(read_file('js/'+name), key, content_type=JS)
 
         self.slb = slb
 
@@ -258,6 +247,12 @@ SEL_A_HREF_NO_PROTO = CSSSelector('a[href^="//"]')
 SEL_IMG_SRC_NO_PROTO = CSSSelector('img[src^="//"]')
 SEL_A_HREF_CITE = CSSSelector('a[href^="#cite"]')
 SEL_A_IMAGE = CSSSelector('a.image')
+SEL_MATH = CSSSelector('img.tex, .mwe-math-fallback-png-display, '
+                       '.mwe-math-fallback-png-inline, '
+                       '.mwe-math-fallback-source-display,'
+                       '.mwe-math-fallback-source-inline, '
+                       'strong.texerror')
+
 
 CLEANER = lxml.html.clean.Cleaner(
     comments=True,
@@ -300,9 +295,12 @@ def convert(title, text, rtl=False, article_url_template=None):
         if 'srcset' in item.attrib:
             item.attrib['srcset'] = item.attrib['srcset'].replace('//', 'http://')
 
-    for item in SEL_IMG_TEX(doc):
-        item.attrib.pop('srcset', None)
-        item.attrib.pop('src', None)
+    has_math = len(SEL_MATH(doc)) > 0
+
+    if has_math:
+        for item in SEL_IMG_TEX(doc):
+            item.attrib.pop('srcset', None)
+            item.attrib.pop('src', None)
 
     if article_url_template:
         article_url = article_url_template.replace(
@@ -325,15 +323,22 @@ def convert(title, text, rtl=False, article_url_template=None):
             else:
                 doc.insert(0, title_heading)
 
+    if has_math:
+        math_jax = (
+            '<script src="~/js/jquery-2.1.1.min.js"></script>'
+            '<script src="~/MathJax/MathJax.js"></script>'
+            '<script src="~/js/mathjax-config.js"></script>'
+        )
+    else:
+        math_jax = ''
+
     result = ''.join((
         '<html>'
         '<head>',
-        '<script src="_js/jquery-2.1.1.min.js"></script>',
-        '<script src="_MathJax/MathJax.js"></script>',
-        '<script src="_js/mathjax-config.js"></script>',
-        '<link rel="stylesheet" href="_css/shared.css" type="text/css"></link>',
-        '<link rel="stylesheet" href="_css/mediawiki_shared.css" type="text/css"></link>',
-        '<link rel="stylesheet" href="_css/mediawiki_monobook.css" type="text/css"></link>',
+        math_jax,
+        '<link rel="stylesheet" href="~/css/shared.css" type="text/css"></link>',
+        '<link rel="stylesheet" href="~/css/mediawiki_shared.css" type="text/css"></link>',
+        '<link rel="stylesheet" href="~/css/mediawiki_monobook.css" type="text/css"></link>',
         '</head>'
         '<body>',
         '<div dir="rtl" class="rtl">' if rtl else '',
@@ -436,9 +441,10 @@ def parse_args():
 
 
 
-def add_dir(slb, topdir):
+def add_dir(slb, topdir, prefix='~/'):
+    print('Adding', topdir)
     for item in os.walk(topdir):
-        dirpath, dirnames, filenames = item
+        dirpath, _dirnames, filenames = item
         for filename in filenames:
             full_path = os.path.join(dirpath, filename)
             _, ext = os.path.splitext(filename)
@@ -450,37 +456,45 @@ def add_dir(slb, topdir):
             else:
                 with open(full_path, 'rb') as f:
                     content = f.read()
-                    slb.add(content, full_path, content_type=content_type)
+                    key = prefix + full_path
+                    slb.add(content, key, content_type=content_type)
 
 
 def main():
-    args = parse_args()
-    t0 = time.time()
-    sort_t0 = None
-    aliases_t0 = None
 
     def p(text):
         sys.stdout.write(text)
         sys.stdout.flush()
 
+    times = {}
+
+    def begin(name):
+        times[name] = time.time()
+
+    def end(name):
+        t0 = times.pop(name)
+        dt = timedelta(seconds=int(time.time() - t0))
+        return dt
+
     def observer(e):
-        nonlocal t0, sort_t0, aliases_t0
         if e.name == 'begin_finalize':
-            p('\nFinished adding content in %.2fs' % (time.time() - t0))
-            t0 = time.time()
+            p('\nFinished adding content in %s' % end('content'))
             p('\nFinalizing...')
+            begin('finalize')
         if e.name == 'end_finalize':
-            p('\nFinilized in %.2fs' % (time.time() - t0))
+            p('\nFinilized in %s' % end('finalize'))
         elif e.name == 'begin_resolve_aliases':
             p('\nResolving aliases...')
-            aliases_t0 = time.time()
+            begin('aliases')
         elif e.name == 'end_resolve_aliases':
-            p('\nResolved aliases in %.2fs' % (time.time() - aliases_t0))
+            p('\nResolved aliases in %s' % end('aliases'))
         elif e.name == 'begin_sort':
             p('\nSorting...')
-            sort_t0 = time.time()
+            begin('sort')
         elif e.name == 'end_sort':
-            p(' sorted in %.2fs' % (time.time() - sort_t0))
+            p(' sorted in %s' % end('sort'))
+
+    args = parse_args()
 
     outname = args.output_file
     if outname is None:
@@ -493,12 +507,18 @@ def main():
                      workdir=args.work_dir,
                      min_bin_size=args.bin_size*1024,
                      observer=observer) as slb:
+        begin('content')
+        begin('all')
         slb.tag('license.name', args.license_name)
         slb.tag('license.url', args.license_url)
         slb.tag('created.by', args.created_by)
         slb.tag('copyright', '')
         current_dir = os.getcwd()
         os.chdir(os.path.dirname(__file__))
-        add_dir(slb, '_MathJax')
+        add_dir(slb, 'js')
+        add_dir(slb, 'css')
+        add_dir(slb, 'MathJax')
         os.chdir(current_dir)
         CouchArticleSource(args, slb).run()
+
+    p('\nAll done in %s\n' % end('all'))
