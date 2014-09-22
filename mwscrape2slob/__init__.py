@@ -70,8 +70,9 @@ def mkcouch(couch_url):
 
 SELECTORS = []
 INTERWIKI = {}
+NAMESPACES = {}
 
-def process_initializer(css_selectors, interwikimap):
+def process_initializer(css_selectors, interwikimap, namespaces):
     for css_selector in css_selectors:
         SELECTORS.append(CSSSelector(css_selector))
     for item in interwikimap:
@@ -79,6 +80,17 @@ def process_initializer(css_selectors, interwikimap):
         url = item.get('url')
         if prefix and url:
             INTERWIKI[prefix] = url
+    for _id, item in namespaces.items():
+        canonical = item.get('canonical')
+        name = item.get('*')
+        ns_id = item.get('id')
+        if ns_id:
+            if canonical:
+                NAMESPACES[canonical] = ns_id
+                NAMESPACES[canonical.lower()] = ns_id
+            if name:
+                NAMESPACES[name] = ns_id
+                NAMESPACES[name.lower()] = ns_id
 
 
 class CouchArticleSource(collections.Sized):
@@ -114,6 +126,7 @@ class CouchArticleSource(collections.Sized):
         self._metadata['siteinfo'] = siteinfo = siteinfo_couch[self.couch.name]
 
         self.interwikimap = siteinfo.get('interwikimap', [])
+        self.namespaces = siteinfo.get('namespaces', {})
         general_siteinfo = siteinfo['general']
         sitename = general_siteinfo['sitename']
         sitelang = general_siteinfo['lang']
@@ -209,7 +222,9 @@ class CouchArticleSource(collections.Sized):
 
         pool = multiprocessing.Pool(None, process_initializer, [
             self.filters,
-            self.interwikimap])
+            self.interwikimap,
+            self.namespaces
+        ])
         try:
             resulti = pool.imap_unordered(safe_convert, articles())
             for title, aliases, text, error in resulti:
@@ -309,13 +324,19 @@ def convert(title, text, rtl=False, article_url_template=None):
         href = item.attrib.get('href')
         if href:
             parsed = urlparse(href)
+            url_template = None
+            if article_url_template and parsed.scheme in NAMESPACES:
+                url_template = article_url_template.replace('$1',
+                                                            parsed.scheme + ':$1')
             if parsed.scheme in INTERWIKI:
                 url_template = INTERWIKI[parsed.scheme]
+            if url_template:
                 new_href = url_template.replace('$1', parsed.path)
                 if parsed.fragment:
                     new_href = '#'.join((new_href, parsed.fragment))
                 print('{}: {} -> {}'.format(title, href, new_href))
                 item.attrib['href'] = new_href
+
 
     has_math = len(SEL_MATH(doc)) > 0
 
