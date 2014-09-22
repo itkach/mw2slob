@@ -46,3 +46,6 @@ div:empty
 p:empty
 script
 style
+#persondata
+.mbox-image
+.mbox-text
