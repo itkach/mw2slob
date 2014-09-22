@@ -69,10 +69,16 @@ def mkcouch(couch_url):
 
 
 SELECTORS = []
+INTERWIKI = {}
 
-def process_initializer(css_selectors):
+def process_initializer(css_selectors, interwikimap):
     for css_selector in css_selectors:
         SELECTORS.append(CSSSelector(css_selector))
+    for item in interwikimap:
+        prefix = item.get('prefix')
+        url = item.get('url')
+        if prefix and url:
+            INTERWIKI[prefix] = url
 
 
 class CouchArticleSource(collections.Sized):
@@ -107,6 +113,7 @@ class CouchArticleSource(collections.Sized):
         self._metadata = {}
         self._metadata['siteinfo'] = siteinfo = siteinfo_couch[self.couch.name]
 
+        self.interwikimap = siteinfo.get('interwikimap', [])
         general_siteinfo = siteinfo['general']
         sitename = general_siteinfo['sitename']
         sitelang = general_siteinfo['lang']
@@ -200,7 +207,9 @@ class CouchArticleSource(collections.Sized):
                 for item in articles_from_viewiter(viewiter):
                     yield item
 
-        pool = multiprocessing.Pool(None, process_initializer, [self.filters])
+        pool = multiprocessing.Pool(None, process_initializer, [
+            self.filters,
+            self.interwikimap])
         try:
             resulti = pool.imap_unordered(safe_convert, articles())
             for title, aliases, text, error in resulti:
@@ -242,6 +251,7 @@ NEWLINE_RE = re.compile(r'[\n]{2,}')
 
 SEL_IMG_TEX = CSSSelector('img.tex')
 SEL_A_NEW = CSSSelector('a.new')
+SEL_A = CSSSelector('a')
 SEL_A_HREF_WIKI = CSSSelector('a[href^="/wiki/"]')
 SEL_A_HREF_NO_PROTO = CSSSelector('a[href^="//"]')
 SEL_IMG_SRC_NO_PROTO = CSSSelector('img[src^="//"]')
@@ -294,6 +304,18 @@ def convert(title, text, rtl=False, article_url_template=None):
         item.attrib['src'] = 'http:' + item.attrib['src']
         if 'srcset' in item.attrib:
             item.attrib['srcset'] = item.attrib['srcset'].replace('//', 'http://')
+
+    for item in SEL_A(doc):
+        href = item.attrib.get('href')
+        if href:
+            parsed = urlparse(href)
+            if parsed.scheme in INTERWIKI:
+                url_template = INTERWIKI[parsed.scheme]
+                new_href = url_template.replace('$1', parsed.path)
+                if parsed.fragment:
+                    new_href = '#'.join((new_href, parsed.fragment))
+                print('{}: {} -> {}'.format(title, href, new_href))
+                item.attrib['href'] = new_href
 
     has_math = len(SEL_MATH(doc)) > 0
 
