@@ -3,9 +3,25 @@
   created by [[https://github.com/itkach/mwscrape][mwscrape]].
 
 ** Installation
+
+   ``mwscrape2slob`` depends on the following components:
+
+   - [[http://github.org/itkach/slob/][Slob]]
+   - [[https://github.com/djc/couchdb-python/][couchdb-python]]
+   - [[http://lxml.de][lxml]]
+   - [[https://pythonhosted.org/cssselect/][cssselect]]
+
+   Install ``lxml`` (consult your operating system documentation for
+   installation instructions). For example, on Ubuntu 14.04:
+
+   #+BEGIN_SRC sh
+   sudo apt-get install python3-lxml
+   #+END_SRC
+
    Create Python 3 virtual environment and install slob.py as
-   described at http://github.org/itkach/slob/. In this virtual
-   environment run
+   described at http://github.org/itkach/slob/.
+
+   In this virtual environment run
 
    #+BEGIN_SRC sh
    pip install git+https://github.com/itkach/mwscrape2slob.git
