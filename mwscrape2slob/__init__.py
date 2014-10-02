@@ -122,6 +122,8 @@ class CouchArticleSource(collections.Sized):
 
         log.info('Will apply following filters:\n%s', '\n'.join(self.filters))
 
+        self.langlinks = args.langlinks
+
         self._metadata = {}
         self._metadata['siteinfo'] = siteinfo = siteinfo_couch[self.couch.name]
 
@@ -161,6 +163,9 @@ class CouchArticleSource(collections.Sized):
                 '~/siteinfo.json',
                 content_type='application/json')
 
+        if self.langlinks:
+            slb.tag('langlinks', ' '.join(self.langlinks))
+
         self.slb = slb
 
 
@@ -189,7 +194,15 @@ class CouchArticleSource(collections.Sized):
             for row in viewiter:
                 if row and row.doc:
                     try:
-                        result = (row.id, set(row.doc.get('aliases', ())),
+                        aliases = set(row.doc.get('aliases', ()))
+                        if self.langlinks:
+                            doc_langlinks = row.doc['parse'].get('langlinks', ())
+                            for doc_langlink in doc_langlinks:
+                                ll_lang = doc_langlink.get('lang')
+                                ll_title = doc_langlink.get('*')
+                                if ll_lang and ll_lang in self.langlinks and ll_title:
+                                    aliases.add(ll_title)
+                        result = (row.id, aliases,
                                   row.doc['parse']['text']['*'], self.rtl,
                                   self.article_url_template)
                     except Exception:
@@ -462,6 +475,12 @@ def parse_args():
                             default='',
                             help=('Value for license.url tag. '
                                   'This should be a URL for license text'))
+
+    arg_parser.add_argument('-ll', '--langlinks',
+                            default=None,
+                            nargs='+',
+                            help=('Include article titles from Wikipedia '
+                                  'language links for these languages if available'))
 
     arg_parser.add_argument('-a', '--created-by', type=str,
                             default='',
