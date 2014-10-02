@@ -164,7 +164,7 @@ class CouchArticleSource(collections.Sized):
                 content_type='application/json')
 
         if self.langlinks:
-            slb.tag('langlinks', ' '.join(self.langlinks))
+            slb.tag('langlinks', ' '.join(sorted(self.langlinks)))
 
         self.slb = slb
 
