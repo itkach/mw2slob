@@ -89,5 +89,5 @@ optional arguments:
    to create a slob using /common/ and /wiki/ content filters:
 
    #+BEGIN_SRC sh
-   mwscrape2slob http://127.0.0.3/simple-m-wikipedia-org -f common wiki
+   mwscrape2slob http://127.0.0.1:5984/simple-m-wikipedia-org -f common wiki
    #+END_SRC
