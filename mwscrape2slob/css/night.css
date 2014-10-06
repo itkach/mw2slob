@@ -1,0 +1,25 @@
+body {
+    background-color: black;
+    color: gray;
+}
+
+table {
+    background-color: black !important;
+    color: gray !important;
+}
+
+div.thumbinner {
+    background-color: #191919 !important;
+}
+
+div.thumb {
+    border-color: black !important;
+}
+
+a {
+    color: green;
+}
+
+a:visited {
+    color: darkgreen;
+}

@@ -395,6 +395,7 @@ def convert(title, text, rtl=False, article_url_template=None):
         '<link rel="stylesheet" href="~/css/shared.css" type="text/css"></link>',
         '<link rel="stylesheet" href="~/css/mediawiki_shared.css" type="text/css"></link>',
         '<link rel="stylesheet" href="~/css/mediawiki_monobook.css" type="text/css"></link>',
+        '<link rel="alternate stylesheet" href="~/css/night.css" type="text/css" title="Dark"></link>',
         '</head>'
         '<body>',
         '<div dir="rtl" class="rtl">' if rtl else '',
