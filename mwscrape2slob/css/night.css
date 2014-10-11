@@ -3,6 +3,14 @@ body {
     color: gray;
 }
 
+h1, h2, h3, h4, h5, h6 {
+    color: gray !important;
+}
+
+img {
+    background-color: gray;
+}
+
 table {
     background-color: black !important;
     color: gray !important;
