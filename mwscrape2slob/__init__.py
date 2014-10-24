@@ -323,7 +323,9 @@ def convert(title, text, rtl=False, article_url_template=None):
         item.attrib.pop('href', None)
 
     for item in SEL_A_HREF_WIKI(doc):
-        item.attrib['href'] = item.attrib['href'].replace('/wiki/', '')
+        item.attrib['href'] = (item.attrib['href']
+                               .replace('/wiki/', '')
+                               .replace('/', '%2F'))
 
     for item in SEL_A_HREF_NO_PROTO(doc):
         item.attrib['href'] = 'http:' + item.attrib['href']
