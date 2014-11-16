@@ -285,6 +285,7 @@ SEL_A_HREF_NO_PROTO = CSSSelector('a[href^="//"]')
 SEL_IMG_SRC_NO_PROTO = CSSSelector('img[src^="//"]')
 SEL_A_HREF_CITE = CSSSelector('a[href^="#cite"]')
 SEL_A_IMAGE = CSSSelector('a.image')
+SEL_A_IPA = CSSSelector('span.IPA>a')
 SEL_MATH = CSSSelector('img.tex, .mwe-math-fallback-png-display, '
                        '.mwe-math-fallback-png-inline, '
                        '.mwe-math-fallback-source-display,'
@@ -317,6 +318,9 @@ def convert(title, text, rtl=False, article_url_template=None):
             item.drop_tree()
 
     for item in SEL_A_IMAGE(doc):
+        item.drop_tag()
+
+    for item in SEL_A_IPA(doc):
         item.drop_tag()
 
     for item in SEL_A_NEW(doc):
