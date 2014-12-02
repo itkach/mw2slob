@@ -26,7 +26,7 @@ CSSSelector = functools.partial(CSSSelector, translator='html')
 
 log = logging.getLogger(__name__)
 
-HTML = 'text/html; charset=utf-8'
+HTML_CHARSET_TMPL = 'text/html;charset={0}'
 CSS = 'text/css'
 JS = 'application/javascript'
 
@@ -43,6 +43,10 @@ MIME_TYPES = {
     "ttf": "application/x-font-ttf",
     "otf": "application/x-font-opentype"
 }
+
+ConvertParams = collections.namedtuple(
+    'ConvertParams', 'title aliases text rtl article_url_template encoding')
+
 
 def read_file(name):
     with (open(os.path.join(os.path.dirname(__file__), name), 'rb')) as f:
@@ -166,6 +170,8 @@ class CouchArticleSource(collections.Sized):
         if self.langlinks:
             slb.tag('langlinks', ' '.join(sorted(self.langlinks)))
 
+        self.html_encoding = args.html_encoding
+
         self.slb = slb
 
 
@@ -205,8 +211,15 @@ class CouchArticleSource(collections.Sized):
                         result = (row.id, aliases,
                                   row.doc['parse']['text']['*'], self.rtl,
                                   self.article_url_template)
+                        result = ConvertParams(
+                            title=row.id,
+                            aliases=aliases,
+                            text=row.doc['parse']['text']['*'],
+                            rtl=self.rtl,
+                            article_url_template=self.article_url_template,
+                            encoding=self.html_encoding)
                     except Exception:
-                        result = row.id, None, None, False, None
+                        result = ConvertParams(title=row.id)
                     yield result
 
         if self.key_file:
@@ -223,8 +236,8 @@ class CouchArticleSource(collections.Sized):
                         for item in articles_from_viewiter(viewiter):
                             keys_found.add(item[0])
                             yield item
-                        for key in (set(query_args['keys']) - keys_found):
-                            yield key, None, None, False, None
+                        for key in set(query_args['keys']) - keys_found:
+                            yield ConvertParams(title=key)
                         keys_found.clear()
         else:
             def articles():
@@ -248,7 +261,9 @@ class CouchArticleSource(collections.Sized):
                         keys = [title]
                         if aliases:
                             keys += aliases
-                        self.slb.add(text, *keys, content_type=HTML)
+                        self.slb.add(
+                            text, *keys,
+                            content_type=HTML_CHARSET_TMPL.format(self.html_encoding))
                         print('  ' + title)
                     else:
                         print('E ' + title)
@@ -260,13 +275,14 @@ class CouchArticleSource(collections.Sized):
 
 
 def safe_convert(params):
-    (title, aliases, text, rtl, article_url_template) = params
+    (title, aliases, text, rtl, article_url_template, encoding) = params
     try:
         if text is None:
             return title, aliases, '', None
         html = convert(title, text,
-                        rtl=rtl,
-                        article_url_template=article_url_template)
+                       rtl=rtl,
+                       article_url_template=article_url_template,
+                       encoding=encoding)
         return title, aliases, html, None
     except KeyboardInterrupt:
         raise
@@ -306,7 +322,9 @@ CLEANER = lxml.html.clean.Cleaner(
     safe_attrs_only=False)
 
 
-def convert(title, text, rtl=False, article_url_template=None):
+def convert(title, text, rtl=False,
+            article_url_template=None,
+            encoding='utf-8'):
 
     text = NEWLINE_RE.sub('\n', text)
     doc = lxml.html.fromstring(text)
@@ -409,7 +427,7 @@ def convert(title, text, rtl=False, article_url_template=None):
         '</div>' if rtl else '',
         '</body>',
         '</html>'
-    )) .encode('utf-8')
+    )) .encode(encoding)
 
     return result
 
@@ -505,6 +523,10 @@ def parse_args():
                             help=('Directory where filter files '
                                   'are located. '
                                   'Default: filters directory in this package'))
+
+    arg_parser.add_argument('--html-encoding', type=str, default='utf-8',
+                            help=('HTML text encoding.'
+                                  'Default: %(default)s'))
 
     return arg_parser.parse_args()
 
