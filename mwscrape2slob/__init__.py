@@ -219,7 +219,14 @@ class CouchArticleSource(collections.Sized):
                             article_url_template=self.article_url_template,
                             encoding=self.html_encoding)
                     except Exception:
-                        result = ConvertParams(title=row.id)
+                        result = ConvertParams(
+                            title=row.id,
+                            aliases=(),
+                            text=None,
+                            rtl=self.rtl,
+                            article_url_template=self.article_url_template,
+                            encoding=self.html_encoding
+                        )
                     yield result
 
         if self.key_file:
