@@ -77,6 +77,7 @@ INTERWIKI = {}
 NAMESPACES = {}
 
 def process_initializer(css_selectors, interwikimap, namespaces):
+    logging.basicConfig()
     for css_selector in css_selectors:
         SELECTORS.append(CSSSelector(css_selector))
     for item in interwikimap:
@@ -559,6 +560,8 @@ def add_dir(slb, topdir, prefix='~/'):
 
 
 def main():
+
+    logging.basicConfig()
 
     def p(text):
         sys.stdout.write(text)
