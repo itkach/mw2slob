@@ -264,6 +264,7 @@ class CouchArticleSource(collections.Sized):
             self.interwikimap,
             self.namespaces
         ])
+        html_content_type = HTML_CHARSET_TMPL.format(self.html_encoding)
         try:
             resulti = pool.imap_unordered(safe_convert, articles())
             for title, aliases, text, error in resulti:
@@ -276,7 +277,7 @@ class CouchArticleSource(collections.Sized):
                             keys += aliases
                         self.slb.add(
                             text, *keys,
-                            content_type=HTML_CHARSET_TMPL.format(self.html_encoding))
+                            content_type=html_content_type)
                         print('  ' + title)
                     else:
                         print('E ' + title)
