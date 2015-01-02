@@ -224,6 +224,7 @@ class CouchArticleSource(collections.Sized):
                             article_url_template=self.article_url_template,
                             encoding=self.html_encoding)
                     except Exception:
+                        log.exception('')
                         result = ConvertParams(
                             title=row.id,
                             aliases=(),
@@ -319,7 +320,6 @@ SEL_MATH = CSSSelector('img.tex, .mwe-math-fallback-png-display, '
                        '.mwe-math-fallback-source-display,'
                        '.mwe-math-fallback-source-inline, '
                        'strong.texerror')
-
 
 CLEANER = lxml.html.clean.Cleaner(
     comments=True,
