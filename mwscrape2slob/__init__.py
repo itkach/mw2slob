@@ -201,7 +201,11 @@ class CouchArticleSource(collections.Sized):
             for row in viewiter:
                 if row and row.doc:
                     try:
-                        aliases = set(row.doc.get('aliases', ()))
+                        aliases = set()
+                        for alias in row.doc.get('aliases', ()):
+                            if isinstance(alias, list):
+                                alias = tuple(alias)
+                            aliases.add(alias)
                         if self.langlinks:
                             doc_langlinks = row.doc['parse'].get('langlinks', ())
                             for doc_langlink in doc_langlinks:
