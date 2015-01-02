@@ -355,7 +355,7 @@ def convert(title, text, rtl=False,
         item.drop_tag()
 
     for item in SEL_A_NEW(doc):
-        item.attrib.pop('href', None)
+        item.drop_tag()
 
     for item in SEL_A_HREF_WIKI(doc):
         item.attrib['href'] = (item.attrib['href']
