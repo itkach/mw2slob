@@ -1,10 +1,10 @@
 body {
     background-color: black;
-    color: gray;
+    color: #a0a0a0;
 }
 
-h1, h2, h3, h4, h5, h6 {
-    color: gray !important;
+h1, h2, h3, h4, h5, h6, a.new {
+    color: #a0a0a0 !important;
 }
 
 img {
@@ -13,7 +13,7 @@ img {
 
 table {
     background-color: black !important;
-    color: gray !important;
+    color: #a0a0a0 !important;
 }
 
 div.thumbinner {
@@ -25,9 +25,9 @@ div.thumb {
 }
 
 a {
-    color: green;
+    color: #A3964E;
 }
 
 a:visited {
-    color: darkgreen;
+    color: #735A0A;
 }
