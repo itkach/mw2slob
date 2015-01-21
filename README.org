@@ -90,7 +90,7 @@ optional arguments:
                         Directory where filter files are located. Default:
                         filters directory in this package
   --html-encoding HTML_ENCODING
-                        HTML text encoding.Default: utf-8
+                        HTML text encoding. Default: utf-8
   --remove-embedded-bg REMOVE_EMBEDDED_BG
                         Comma separated list of CSS selectors. Background will
                         be removed from matching element's style attribute.

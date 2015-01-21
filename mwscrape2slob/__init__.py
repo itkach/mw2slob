@@ -565,7 +565,7 @@ def parse_args():
                                   'Default: filters directory in this package'))
 
     arg_parser.add_argument('--html-encoding', type=str, default='utf-8',
-                            help=('HTML text encoding.'
+                            help=('HTML text encoding. '
                                   'Default: %(default)s'))
 
     arg_parser.add_argument('--remove-embedded-bg', type=str, default='',
