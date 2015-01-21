@@ -281,6 +281,8 @@ class CouchArticleSource(collections.Sized):
                         print('  ' + title)
                     else:
                         print('E ' + title)
+        except KeyboardInterrupt:
+            log.warn('User interrupted')
         except:
             log.exception('')
             raise
