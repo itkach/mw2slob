@@ -623,7 +623,7 @@ def main():
             p('\nFinalizing...')
             begin('finalize')
         if e.name == 'end_finalize':
-            p('\nFinilized in %s' % end('finalize'))
+            p('\nFinalized in %s' % end('finalize'))
         elif e.name == 'begin_resolve_aliases':
             p('\nResolving aliases...')
             begin('aliases')
