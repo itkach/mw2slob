@@ -16,6 +16,10 @@ table {
     color: #a0a0a0 !important;
 }
 
+.wikitable th {
+    background-color: #292929 !important;
+}
+
 div.thumbinner {
     background-color: #191919 !important;
 }
