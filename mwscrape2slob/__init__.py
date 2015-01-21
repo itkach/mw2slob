@@ -314,6 +314,7 @@ SEL_IMG_TEX = CSSSelector('img.tex')
 SEL_A_NEW = CSSSelector('a.new')
 SEL_A = CSSSelector('a')
 SEL_A_HREF_WIKI = CSSSelector('a[href^="/wiki/"]')
+SEL_AREA_HREF_WIKI = CSSSelector('area[href^="/wiki/"]')
 SEL_A_HREF_NO_PROTO = CSSSelector('a[href^="//"]')
 SEL_IMG_SRC_NO_PROTO = CSSSelector('img[src^="//"]')
 SEL_A_HREF_CITE = CSSSelector('a[href^="#cite"]')
@@ -376,7 +377,7 @@ def convert(title, text, rtl=False,
                 ss.background = None
                 item.attrib['style'] = ss.cssText
 
-    for item in SEL_A_HREF_WIKI(doc):
+    for item in itertools.chain(SEL_A_HREF_WIKI(doc), SEL_AREA_HREF_WIKI(doc)):
         item.attrib['href'] = (item.attrib['href']
                                .replace('/wiki/', '')
                                .replace('/', '%2F'))
