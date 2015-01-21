@@ -16,6 +16,14 @@ table {
     color: #a0a0a0 !important;
 }
 
+table.translations td {
+    background-color: #191919;
+}
+
+table.translations {
+    border-collapse: collapse;
+}
+
 .wikitable th {
     background-color: #292929 !important;
 }
