@@ -573,7 +573,7 @@ def parse_args():
                                   'Background will be removed from matching '
                                   'element\'s style attribute. For example, to '
                                   'remove background from all elements with style attribute'
-                                  'specify selector [style]'
+                                  'specify selector [style]. '
                                   'Default: %(default)s'))
 
     return arg_parser.parse_args()

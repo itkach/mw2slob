@@ -10,6 +10,7 @@
    - [[https://github.com/djc/couchdb-python/][couchdb-python]]
    - [[http://lxml.de][lxml]]
    - [[https://pythonhosted.org/cssselect/][cssselect]]
+   - [[http://pythonhosted.org//cssutils/][cssutils]]
 
    Install ``lxml`` (consult your operating system documentation for
    installation instructions). For example, on Ubuntu 14.04:
@@ -29,12 +30,16 @@
 
 ** Usage
    #+BEGIN_SRC sh
+
 usage: mwscrape2slob [-h] [-s STARTKEY] [-e ENDKEY] [-k KEY [KEY ...]]
                      [-K KEY_FILE] [-f FILTER_FILE [FILTER_FILE ...]]
                      [-F FILTER [FILTER ...]] [-o OUTPUT_FILE]
                      [-c {lzma2,zlib}] [-b BIN_SIZE] [-u URI]
-                     [-l LICENSE_NAME] [-L LICENSE_URL] [-a CREATED_BY]
+                     [-l LICENSE_NAME] [-L LICENSE_URL]
+                     [-ll LANGLINKS [LANGLINKS ...]] [-a CREATED_BY]
                      [-w WORK_DIR] [--filter-dir FILTER_DIR]
+                     [--html-encoding HTML_ENCODING]
+                     [--remove-embedded-bg REMOVE_EMBEDDED_BG]
                      couch_url
 
 positional arguments:
@@ -60,7 +65,7 @@ optional arguments:
   -o OUTPUT_FILE, --output-file OUTPUT_FILE
                         Name of output slob file
   -c {lzma2,zlib}, --compression {lzma2,zlib}
-                        Name of compression to use. Default: zlib
+                        Name of compression to use. Default: lzma2
   -b BIN_SIZE, --bin-size BIN_SIZE
                         Minimum storage bin size in kilobytes. Default: 384
   -u URI, --uri URI     Value for uri tag. Slob-specific article URLs such as
@@ -72,6 +77,9 @@ optional arguments:
   -L LICENSE_URL, --license-url LICENSE_URL
                         Value for license.url tag. This should be a URL for
                         license text
+  -ll LANGLINKS [LANGLINKS ...], --langlinks LANGLINKS [LANGLINKS ...]
+                        Include article titles from Wikipedia language links
+                        for these languages if available
   -a CREATED_BY, --created-by CREATED_BY
                         Value for created.by tag. Identifier (e.g. name or
                         email) for slob file creator
@@ -81,6 +89,13 @@ optional arguments:
   --filter-dir FILTER_DIR
                         Directory where filter files are located. Default:
                         filters directory in this package
+  --html-encoding HTML_ENCODING
+                        HTML text encoding.Default: utf-8
+  --remove-embedded-bg REMOVE_EMBEDDED_BG
+                        Comma separated list of CSS selectors. Background will
+                        be removed from matching element's style attribute.
+                        For example, to remove background from all elements
+                        with style attributespecify selector [style]. Default:
 
    #+END_SRC
 
