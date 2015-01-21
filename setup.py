@@ -23,7 +23,7 @@ setup(name=PACKAGE_NAME,
       license='GPL3',
       packages=[PACKAGE_NAME],
       package_data={PACKAGE_NAME: find_package_data()},
-      install_requires=['Slob >= 1.0', 'lxml', 'cssselect', 'CouchDB'],
+      install_requires=['Slob >= 1.0', 'lxml', 'CouchDB',
+                        'cssselect', 'cssutils'],
       zip_safe=False,
-      entry_points={'console_scripts': ['{0}={0}:main'.format(PACKAGE_NAME)]}
-)
+      entry_points={'console_scripts': ['{0}={0}:main'.format(PACKAGE_NAME)]})

@@ -15,12 +15,14 @@ from urllib.parse import urlparse, quote
 
 import slob
 import couchdb
+import cssutils
 
 import lxml.html
 import lxml.html.clean
 from lxml.html import builder as E
 
 from lxml.cssselect import CSSSelector
+
 
 CSSSelector = functools.partial(CSSSelector, translator='html')
 
@@ -45,7 +47,7 @@ MIME_TYPES = {
 }
 
 ConvertParams = collections.namedtuple(
-    'ConvertParams', 'title aliases text rtl article_url_template encoding')
+    'ConvertParams', 'title aliases text rtl article_url_template args')
 
 
 def read_file(name):
@@ -171,8 +173,7 @@ class CouchArticleSource(collections.Sized):
         if self.langlinks:
             slb.tag('langlinks', ' '.join(sorted(self.langlinks)))
 
-        self.html_encoding = args.html_encoding
-
+        self.args = args
         self.slb = slb
 
 
@@ -222,7 +223,7 @@ class CouchArticleSource(collections.Sized):
                             text=row.doc['parse']['text']['*'],
                             rtl=self.rtl,
                             article_url_template=self.article_url_template,
-                            encoding=self.html_encoding)
+                            args=self.args)
                     except Exception:
                         log.exception('')
                         result = ConvertParams(
@@ -231,7 +232,7 @@ class CouchArticleSource(collections.Sized):
                             text=None,
                             rtl=self.rtl,
                             article_url_template=self.article_url_template,
-                            encoding=self.html_encoding
+                            args=self.args
                         )
                     yield result
 
@@ -264,7 +265,7 @@ class CouchArticleSource(collections.Sized):
             self.interwikimap,
             self.namespaces
         ])
-        html_content_type = HTML_CHARSET_TMPL.format(self.html_encoding)
+        html_content_type = HTML_CHARSET_TMPL.format(self.args.html_encoding)
         try:
             resulti = pool.imap_unordered(safe_convert, articles())
             for title, aliases, text, error in resulti:
@@ -291,14 +292,14 @@ class CouchArticleSource(collections.Sized):
 
 
 def safe_convert(params):
-    (title, aliases, text, rtl, article_url_template, encoding) = params
+    (title, aliases, text, rtl, article_url_template, args) = params
     try:
         if text is None:
             return title, aliases, '', None
         html = convert(title, text,
                        rtl=rtl,
                        article_url_template=article_url_template,
-                       encoding=encoding)
+                       args=args)
         return title, aliases, html, None
     except KeyboardInterrupt:
         raise
@@ -324,6 +325,8 @@ SEL_MATH = CSSSelector('img.tex, .mwe-math-fallback-png-display, '
                        '.mwe-math-fallback-source-inline, '
                        'strong.texerror')
 
+SEL_ELEMENT_STYLE = CSSSelector('[style]')
+
 CLEANER = lxml.html.clean.Cleaner(
     comments=True,
     scripts=True,
@@ -339,7 +342,9 @@ CLEANER = lxml.html.clean.Cleaner(
 
 def convert(title, text, rtl=False,
             article_url_template=None,
-            encoding='utf-8'):
+            args=None):
+
+    encoding = args.html_encoding if args else 'utf-8'
 
     text = NEWLINE_RE.sub('\n', text)
     doc = lxml.html.fromstring(text)
@@ -358,6 +363,18 @@ def convert(title, text, rtl=False,
 
     for item in SEL_A_NEW(doc):
         item.drop_tag()
+
+    for sel_element_with_style in selector_list(args.remove_embedded_bg):
+        for item in sel_element_with_style(doc):
+            style = item.attrib['style']
+            try:
+                ss = cssutils.parseStyle(style)
+            except Exception:
+                log.exception('Failed to parse style attr with value %r', style)
+            else:
+                ss.backgroundColor = None
+                ss.background = None
+                item.attrib['style'] = ss.cssText
 
     for item in SEL_A_HREF_WIKI(doc):
         item.attrib['href'] = (item.attrib['href']
@@ -434,7 +451,7 @@ def convert(title, text, rtl=False,
         '<link rel="stylesheet" href="~/css/shared.css" type="text/css"></link>',
         '<link rel="stylesheet" href="~/css/mediawiki_shared.css" type="text/css"></link>',
         '<link rel="stylesheet" href="~/css/mediawiki_monobook.css" type="text/css"></link>',
-        '<link rel="alternate stylesheet" href="~/css/night.css" type="text/css" title="Dark"></link>',
+        '<link rel="alternate stylesheet" href="~/css/night.css" type="text/css" title="Night"></link>',
         '</head>'
         '<body>',
         '<div dir="rtl" class="rtl">' if rtl else '',
@@ -445,6 +462,13 @@ def convert(title, text, rtl=False,
     )) .encode(encoding)
 
     return result
+
+
+def selector_list(str_value):
+    if str_value:
+        return [CSSSelector(s) for s in str_value.split(',')]
+    else:
+        return []
 
 
 def parse_args():
@@ -541,6 +565,14 @@ def parse_args():
 
     arg_parser.add_argument('--html-encoding', type=str, default='utf-8',
                             help=('HTML text encoding.'
+                                  'Default: %(default)s'))
+
+    arg_parser.add_argument('--remove-embedded-bg', type=str, default='',
+                            help=('Comma separated list of CSS selectors. '
+                                  'Background will be removed from matching '
+                                  'element\'s style attribute. For example, to '
+                                  'remove background from all elements with style attribute'
+                                  'specify selector [style]'
                                   'Default: %(default)s'))
 
     return arg_parser.parse_args()
