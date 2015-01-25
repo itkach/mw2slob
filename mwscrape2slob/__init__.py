@@ -486,20 +486,14 @@ def convert(title, text, rtl, server, articlepath, args):
         math_jax = ''
 
     result = ''.join((
-        '<html>'
-        '<head>',
+        '<link rel="stylesheet" href="~/css/shared.css" type="text/css">',
+        '<link rel="stylesheet" href="~/css/mediawiki_shared.css" type="text/css">',
+        '<link rel="stylesheet" href="~/css/mediawiki_monobook.css" type="text/css">',
+        '<link rel="alternate stylesheet" href="~/css/night.css" type="text/css" title="Night">',
         math_jax,
-        '<link rel="stylesheet" href="~/css/shared.css" type="text/css"></link>',
-        '<link rel="stylesheet" href="~/css/mediawiki_shared.css" type="text/css"></link>',
-        '<link rel="stylesheet" href="~/css/mediawiki_monobook.css" type="text/css"></link>',
-        '<link rel="alternate stylesheet" href="~/css/night.css" type="text/css" title="Night"></link>',
-        '</head>'
-        '<body>',
         '<div dir="rtl" class="rtl">' if rtl else '',
         lxml.html.tostring(doc, encoding='unicode'),
         '</div>' if rtl else '',
-        '</body>',
-        '</html>'
     )) .encode(encoding)
 
     return result
