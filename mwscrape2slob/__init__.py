@@ -11,7 +11,7 @@ import sys
 import time
 
 from datetime import datetime, timedelta
-from urllib.parse import urlparse, quote
+from urllib.parse import urlparse, urlunparse, quote, unquote
 
 import slob
 import couchdb
@@ -48,7 +48,7 @@ MIME_TYPES = {
 }
 
 ConvertParams = collections.namedtuple(
-    'ConvertParams', 'title aliases text rtl article_url_template args')
+    'ConvertParams', 'title aliases text rtl server articlepath args')
 
 
 def read_file(name):
@@ -152,15 +152,15 @@ class CouchArticleSource(collections.Sized):
             slb.tag('license.url', license_url)
 
 
-        article_path = general_siteinfo.get('articlepath')
+        articlepath = general_siteinfo.get('articlepath')
+        if articlepath:
+            articlepath = articlepath.split('$1', 1)[0]
         server = general_siteinfo.get('server', '')
 
-        if server and article_path:
-            article_url_template = server + article_path
-        else:
-            article_url_template = None
-
-        self.article_url_template = article_url_template
+        print('mw server: ', server)
+        print('mw article path: ', articlepath)
+        self.server = server
+        self.articlepath = articlepath
 
         slb.tag('source', server)
         slb.tag('uri', server)
@@ -215,15 +215,13 @@ class CouchArticleSource(collections.Sized):
                                 ll_title = doc_langlink.get('*')
                                 if ll_lang and ll_lang in self.langlinks and ll_title:
                                     aliases.add(ll_title)
-                        result = (row.id, aliases,
-                                  row.doc['parse']['text']['*'], self.rtl,
-                                  self.article_url_template)
                         result = ConvertParams(
                             title=row.id,
                             aliases=aliases,
                             text=row.doc['parse']['text']['*'],
                             rtl=self.rtl,
-                            article_url_template=self.article_url_template,
+                            server=self.server,
+                            articlepath=self.articlepath,
                             args=self.args)
                     except Exception:
                         log.exception('')
@@ -232,7 +230,8 @@ class CouchArticleSource(collections.Sized):
                             aliases=(),
                             text=None,
                             rtl=self.rtl,
-                            article_url_template=self.article_url_template,
+                            server=self.server,
+                            articlepath=self.articlepath,
                             args=self.args
                         )
                     yield result
@@ -252,7 +251,13 @@ class CouchArticleSource(collections.Sized):
                             keys_found.add(item[0])
                             yield item
                         for key in set(query_args['keys']) - keys_found:
-                            yield ConvertParams(title=key)
+                            yield ConvertParams(title=key,
+                                                aliases=(),
+                                                text=None,
+                                                rtl=self.rtl,
+                                                server=self.server,
+                                                articlepath=self.articlepath,
+                                                args=self.args)
                         keys_found.clear()
         else:
             def articles():
@@ -293,14 +298,12 @@ class CouchArticleSource(collections.Sized):
 
 
 def safe_convert(params):
-    (title, aliases, text, rtl, article_url_template, args) = params
+    (title, aliases, text, rtl, server, articlepath, args) = params
     try:
         if text is None:
             return title, aliases, '', None
         html = convert(title, text,
-                       rtl=rtl,
-                       article_url_template=article_url_template,
-                       args=args)
+                       rtl, server, articlepath, args=args)
         return title, aliases, html, None
     except KeyboardInterrupt:
         raise
@@ -313,19 +316,16 @@ NEWLINE_RE = re.compile(r'[\n]{2,}')
 
 SEL_IMG_TEX = CSSSelector('img.tex')
 SEL_A_NEW = CSSSelector('a.new')
-SEL_A = CSSSelector('a')
-SEL_A_HREF_WIKI = CSSSelector('a[href^="/wiki/"]')
-SEL_AREA_HREF_WIKI = CSSSelector('area[href^="/wiki/"]')
-SEL_A_HREF_NO_PROTO = CSSSelector('a[href^="//"]')
-SEL_IMG_SRC_NO_PROTO = CSSSelector('img[src^="//"]')
 SEL_A_HREF_CITE = CSSSelector('a[href^="#cite"]')
-SEL_A_IMAGE = CSSSelector('a.image')
 SEL_A_IPA = CSSSelector('span.IPA>a')
 SEL_MATH = CSSSelector('img.tex, .mwe-math-fallback-png-display, '
                        '.mwe-math-fallback-png-inline, '
                        '.mwe-math-fallback-source-display,'
                        '.mwe-math-fallback-source-inline, '
                        'strong.texerror')
+
+SEL_HREF = CSSSelector('[href]')
+SEL_SRC = CSSSelector('[src]')
 
 SEL_ELEMENT_STYLE = CSSSelector('[style]')
 
@@ -342,9 +342,69 @@ CLEANER = lxml.html.clean.Cleaner(
     safe_attrs_only=False)
 
 
-def convert(title, text, rtl=False,
-            article_url_template=None,
-            args=None):
+def convert_url(url, server=None, articlepath='/wiki/',
+                namespaces=None, interwiki=None):
+    """
+    >>> convert_url('/wiki/ABC#xyz')
+    'ABC#xyz'
+
+    >>> convert_url('/wiki/ABC/123#xyz')
+    'ABC%2F123#xyz'
+
+    >>> convert_url('/ABC', articlepath='/')
+    'ABC'
+
+    >>> convert_url('//example.com/ABC', articlepath='/')
+    'http://example.com/ABC'
+
+    >>> convert_url('ABC')
+    'ABC'
+
+    >>> convert_url('w:ABC', interwiki=dict(w='http://en.wikipedia.org/wiki/$1'))
+    'http://en.wikipedia.org/wiki/ABC'
+
+    >>> convert_url('/wiki/%D0%A4%D0%B0%D0%B9%D0%BB:ABC.gif', server='http://ru.wikipedia.org', namespaces={'Файл'})
+    'http://ru.wikipedia.org/wiki/%D0%A4%D0%B0%D0%B9%D0%BB:ABC.gif'
+
+    """
+    if namespaces is None:
+        namespaces = NAMESPACES
+    if interwiki is None:
+        interwiki = INTERWIKI
+    parsed = urlparse(url)._asdict()
+
+    if parsed['netloc']:
+        if not parsed['scheme']:
+            parsed['scheme'] = 'http'
+        return urlunparse(parsed.values())
+
+    path = parsed['path']
+
+    if path.startswith(articlepath):
+        path = path[len(articlepath):]
+        if ':' in path:
+            prefix, _rest = path.split(':', 1)
+            prefix = unquote(prefix)
+            if prefix in namespaces and server:
+                #Replace links to non-article namespaces
+                #like Categories or  Appendix with external links
+                return ''.join((server, url))
+    else:
+        prefix = parsed['scheme']
+        if prefix and prefix in interwiki:
+            url_template = interwiki[prefix]
+            parsed_interwiki = urlparse(url_template)._asdict()
+            parsed_interwiki['path'] = parsed_interwiki['path'].replace('$1', path)
+            parsed_interwiki['fragment'] = parsed['fragment']
+            if not parsed_interwiki['scheme']:
+                parsed_interwiki['scheme'] = 'http'
+            return urlunparse(parsed_interwiki.values())
+    parsed['path'] = path.replace('/', '%2F')
+    return urlunparse(parsed.values())
+
+
+
+def convert(title, text, rtl, server, articlepath, args):
 
     encoding = args.html_encoding if args else 'utf-8'
 
@@ -356,9 +416,6 @@ def convert(title, text, rtl=False,
     for selector in SELECTORS:
         for item in selector(doc):
             item.drop_tree()
-
-    for item in SEL_A_IMAGE(doc):
-        item.drop_tag()
 
     for item in SEL_A_IPA(doc):
         item.drop_tag()
@@ -378,36 +435,19 @@ def convert(title, text, rtl=False,
                 ss.background = None
                 item.attrib['style'] = ss.cssText
 
-    for item in itertools.chain(SEL_A_HREF_WIKI(doc), SEL_AREA_HREF_WIKI(doc)):
-        item.attrib['href'] = (item.attrib['href']
-                               .replace('/wiki/', '')
-                               .replace('/', '%2F'))
 
-    for item in SEL_A_HREF_NO_PROTO(doc):
-        item.attrib['href'] = 'http:' + item.attrib['href']
+    for item in SEL_HREF(doc):
+        item.attrib['href'] = convert_url(item.attrib['href'],
+                                          server=server,
+                                          articlepath=articlepath)
 
-    for item in SEL_IMG_SRC_NO_PROTO(doc):
-        item.attrib['src'] = 'http:' + item.attrib['src']
+    for item in SEL_SRC(doc):
+        item.attrib['src'] = convert_url(item.attrib['src'],
+                                         server=server,
+                                         articlepath=articlepath)
+
         if 'srcset' in item.attrib:
             item.attrib['srcset'] = item.attrib['srcset'].replace('//', 'http://')
-
-    for item in SEL_A(doc):
-        href = item.attrib.get('href')
-        if href:
-            parsed = urlparse(href)
-            url_template = None
-            if article_url_template and parsed.scheme in NAMESPACES:
-                url_template = article_url_template.replace('$1',
-                                                            parsed.scheme + ':$1')
-            if parsed.scheme in INTERWIKI:
-                url_template = INTERWIKI[parsed.scheme]
-            if url_template:
-                new_href = url_template.replace('$1', parsed.path)
-                if parsed.fragment:
-                    new_href = '#'.join((new_href, parsed.fragment))
-                print('{}: {} -> {}'.format(title, href, new_href))
-                item.attrib['href'] = new_href
-
 
     has_math = len(SEL_MATH(doc)) > 0
 
@@ -416,9 +456,8 @@ def convert(title, text, rtl=False,
             item.attrib.pop('srcset', None)
             item.attrib.pop('src', None)
 
-    if article_url_template:
-        article_url = article_url_template.replace(
-            '$1', quote(title))
+    if server and articlepath:
+        article_url = ''.join((server, articlepath, quote(title)))
         a = E.A(id="view-online-link", href=article_url)
         title_heading = doc.cssselect('h1')
         if len(title_heading) > 0:
