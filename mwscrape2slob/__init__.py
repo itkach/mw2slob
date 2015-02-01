@@ -480,7 +480,7 @@ def convert(title, text, rtl, server, articlepath, args):
         math_jax = (
             '<script src="~/js/jquery-2.1.3.min.js"></script>'
             '<script src="~/MathJax/MathJax.js"></script>'
-            '<script src="~/MathJax/MediaWiki-HTML.js"></script>'
+            '<script src="~/MathJax/MediaWiki.js"></script>'
         )
     else:
         math_jax = ''

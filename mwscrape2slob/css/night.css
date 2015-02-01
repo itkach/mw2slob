@@ -7,6 +7,11 @@ h1, h2, h3, h4, h5, h6, a.new {
     color: #a0a0a0 !important;
 }
 
+.mjx-svg-mrow {
+    fill: #a0a0a0;
+    stroke: #a0a0a0;
+}
+
 img {
     background-color: lightgray;
 }

@@ -2,34 +2,36 @@
 MJX_HOME=${MJX_HOME:-~/MathJax}
 MJX_DEV_HOME=${MJX_DEV_HOME:-~/MathJax-dev}
 DEST=$PWD/mwscrape2slob/MathJax
+TYPE=${OUTPUT_TYPE:-"SVG"}
 
 echo "MathJax home: $MJX_HOME"
 echo "MathJax-dev home: $MJX_DEV_HOME"
 echo "Destination: $DEST"
+echo "Output type: $TYPE"
 
 cd $PWD/mathjax/
-cp MediaWiki_HTML.lis $MJX_DEV_HOME/combiner/lists/
-cp config/MediaWiki-HTML-settings.js $MJX_HOME/config/
+cp MediaWiki_${TYPE}.lis $MJX_DEV_HOME/combiner/lists/
+cp config/MediaWiki_${TYPE}_settings.js $MJX_HOME/config/
 cp extensions/texvc.js  $MJX_HOME/extensions/TeX/
 cp extensions/wiki2jax.js $MJX_HOME/extensions/
 
-rm $MJX_HOME/config/MediaWiki_HTML.js
+rm $MJX_HOME/config/MediaWiki_${TYPE}.js
 $MJX_DEV_HOME/combiner/combineMJ $MJX_HOME
 
-mkdir -p $DEST
-
-cd $DEST
-mkdir -p jax/output fonts/HTML-CSS/STIX-Web/
+mkdir -p $DEST/jax/output
 
 cd $MJX_HOME
 
 SYNC="rsync -aP"
 $SYNC MathJax.js $DEST
-$SYNC config/MediaWiki_HTML.js $DEST
-$SYNC jax/element $DEST/jax/
-$SYNC jax/output/CommonHTML $DEST/jax/output/
+$SYNC config/MediaWiki_${TYPE}.js $DEST/MediaWiki.js
+$SYNC jax/element --exclude jax.js $DEST/jax/
 
-$SYNC jax/output/HTML-CSS \
+#enabling CommonHTML preview incurs
+#prohibiting penalty on mobile, at least in MathJax 2.5
+#$SYNC jax/output/CommonHTML $DEST/jax/output/
+
+$SYNC jax/output/${TYPE} \
 --exclude imageFonts.js \
 --exclude config.js \
 --exclude jax.js \
@@ -42,6 +44,9 @@ $SYNC jax/output/HTML-CSS \
 --exclude TeX \
 $DEST/jax/output/
 
-$SYNC fonts/HTML-CSS/STIX-Web/woff $DEST/fonts/HTML-CSS/STIX-Web/
+if [ -d fonts/${TYPE}/STIX-Web/woff ]; then
+    mkdir -p $DEST/fonts/${TYPE}/STIX-Web/
+    $SYNC fonts/${TYPE}/STIX-Web/woff $DEST/fonts/${TYPE}/STIX-Web/
+fi
 
 du -hs $DEST
