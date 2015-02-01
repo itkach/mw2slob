@@ -1,0 +1,14 @@
+extensions/MathEvents.js
+extensions/TeX/noErrors.js
+extensions/TeX/noUndefined.js
+extensions/TeX/AMSmath.js
+extensions/TeX/AMSsymbols.js
+extensions/TeX/texvc.js
+extensions/TeX/color.js
+extensions/TeX/cancel.js
+extensions/wiki2jax.js
+jax/input/TeX/config.js
+jax/output/SVG/autoload/mtable.js
+jax/output/SVG/config.js
+jax/output/SVG/jax.js
+config/MediaWiki-SVG-settings.js

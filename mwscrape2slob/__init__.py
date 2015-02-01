@@ -478,9 +478,9 @@ def convert(title, text, rtl, server, articlepath, args):
 
     if has_math:
         math_jax = (
-            '<script src="~/js/jquery-2.1.1.min.js"></script>'
+            '<script src="~/js/jquery-2.1.3.min.js"></script>'
             '<script src="~/MathJax/MathJax.js"></script>'
-            '<script src="~/js/mathjax-config.js"></script>'
+            '<script src="~/MathJax/MediaWiki-HTML.js"></script>'
         )
     else:
         math_jax = ''

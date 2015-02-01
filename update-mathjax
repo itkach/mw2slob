@@ -1,0 +1,47 @@
+#! /usr/bin/env sh
+MJX_HOME=${MJX_HOME:-~/MathJax}
+MJX_DEV_HOME=${MJX_DEV_HOME:-~/MathJax-dev}
+DEST=$PWD/mwscrape2slob/MathJax
+
+echo "MathJax home: $MJX_HOME"
+echo "MathJax-dev home: $MJX_DEV_HOME"
+echo "Destination: $DEST"
+
+cd $PWD/mathjax/
+cp MediaWiki_HTML.lis $MJX_DEV_HOME/combiner/lists/
+cp config/MediaWiki-HTML-settings.js $MJX_HOME/config/
+cp extensions/texvc.js  $MJX_HOME/extensions/TeX/
+cp extensions/wiki2jax.js $MJX_HOME/extensions/
+
+rm $MJX_HOME/config/MediaWiki_HTML.js
+$MJX_DEV_HOME/combiner/combineMJ $MJX_HOME
+
+mkdir -p $DEST
+
+cd $DEST
+mkdir -p jax/output fonts/HTML-CSS/STIX-Web/
+
+cd $MJX_HOME
+
+SYNC="rsync -aP"
+$SYNC MathJax.js $DEST
+$SYNC config/MediaWiki_HTML.js $DEST
+$SYNC jax/element $DEST/jax/
+$SYNC jax/output/CommonHTML $DEST/jax/output/
+
+$SYNC jax/output/HTML-CSS \
+--exclude imageFonts.js \
+--exclude config.js \
+--exclude jax.js \
+--exclude mtable.js \
+--exclude Asana-Math \
+--exclude Gyre-Termes \
+--exclude Neo-Euler \
+--exclude Gyre-Pagella \
+--exclude Latin-Modern \
+--exclude TeX \
+$DEST/jax/output/
+
+$SYNC fonts/HTML-CSS/STIX-Web/woff $DEST/fonts/HTML-CSS/STIX-Web/
+
+du -hs $DEST
