@@ -24,8 +24,8 @@ cd $MJX_HOME
 
 SYNC="rsync -aP"
 $SYNC MathJax.js $DEST
-$SYNC config/MediaWiki_${TYPE}.js $DEST/MediaWiki.js
-$SYNC jax/element --exclude jax.js $DEST/jax/
+cp config/MediaWiki_${TYPE}.js $DEST/MediaWiki.js
+sed -i "s/\[MathJax\]\/config\/MediaWiki_${TYPE}\.js/\[MathJax\]\/MediaWiki\.js/g" $DEST/MediaWiki.js
 
 #enabling CommonHTML preview incurs
 #prohibiting penalty on mobile, at least in MathJax 2.5

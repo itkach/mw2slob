@@ -15,6 +15,8 @@ MathJax.Hub.Config({
                      "cancel.js"]}
 });
 
+MathJax.Hub.processSectionDelay = 0;
+
 var $$mathjaxOnLoadTime;
 
 MathJax.Hub.Register.StartupHook("onLoad",function () {
