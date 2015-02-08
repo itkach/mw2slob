@@ -323,11 +323,10 @@ SEL_MATH = CSSSelector('img.tex, .mwe-math-fallback-png-display, '
                        '.mwe-math-fallback-source-display,'
                        '.mwe-math-fallback-source-inline, '
                        'strong.texerror')
-
 SEL_HREF = CSSSelector('[href]')
 SEL_SRC = CSSSelector('[src]')
-
 SEL_ELEMENT_STYLE = CSSSelector('[style]')
+SEL_GEO_NONDEFAULT = CSSSelector('.geo-nondefault')
 
 CLEANER = lxml.html.clean.Cleaner(
     comments=True,
@@ -403,6 +402,20 @@ def convert_url(url, server=None, articlepath='/wiki/',
     return urlunparse(parsed.values())
 
 
+def convert_get_microformat(doc):
+    for geo_nondefault in SEL_GEO_NONDEFAULT(doc):
+        geo_items = geo_nondefault.cssselect('.geo')
+        for geo in geo_items:
+            coords = geo.text
+            if coords and ';' in coords:
+                latitude, longitude = coords.split(';', 1)
+                a = E.A(
+                    E.IMG(E.CLASS('mwscrape2slob-geo-link-icon'),
+                          src='~/images/Globe.svg'),
+                    href='geo:{},{}'.format(latitude.strip(), longitude.strip()))
+                geo_nondefault.getparent().addnext(a)
+        geo_nondefault.drop_tree()
+
 
 def convert(title, text, rtl, server, articlepath, args):
 
@@ -412,6 +425,8 @@ def convert(title, text, rtl, server, articlepath, args):
     doc = lxml.html.fromstring(text)
 
     CLEANER(doc)
+
+    convert_get_microformat(doc)
 
     for selector in SELECTORS:
         for item in selector(doc):
@@ -698,7 +713,7 @@ def main():
         slb.tag('copyright', '')
         content_dir = os.path.dirname(__file__)
         add_dir(slb, content_dir,
-                include_only={'js', 'css', 'MathJax'},
+                include_only={'js', 'css', 'images', 'MathJax'},
                 prefix='~/')
         if args.content_dirs:
             for content_dir in args.content_dirs:
