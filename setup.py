@@ -7,7 +7,7 @@ def find_package_data():
     cwd = os.getcwd()
     os.chdir(PACKAGE_NAME)
     results = []
-    for name in ['css', 'js', 'filters', 'MathJax']:
+    for name in ['css', 'js', 'images', 'filters', 'MathJax']:
         for root, _dirs, files in os.walk(name):
             for filename in files:
                 results.append(os.path.join(root, filename))
