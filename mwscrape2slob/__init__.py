@@ -705,6 +705,7 @@ def main():
                      workdir=args.work_dir,
                      min_bin_size=args.bin_size*1024,
                      observer=observer) as slb:
+        article_source = CouchArticleSource(args, slb)
         begin('content')
         begin('all')
         slb.tag('license.name', args.license_name)
@@ -718,6 +719,6 @@ def main():
         if args.content_dirs:
             for content_dir in args.content_dirs:
                 add_dir(slb, content_dir)
-        CouchArticleSource(args, slb).run()
+        article_source.run()
 
     p('\nAll done in %s\n' % end('all'))
