@@ -705,8 +705,8 @@ def main():
                      workdir=args.work_dir,
                      min_bin_size=args.bin_size*1024,
                      observer=observer) as slb:
-        article_source = CouchArticleSource(args, slb)
         begin('content')
+        article_source = CouchArticleSource(args, slb)
         begin('all')
         slb.tag('license.name', args.license_name)
         slb.tag('license.url', args.license_url)
