@@ -3,6 +3,7 @@ extensions/TeX/noErrors.js
 extensions/TeX/noUndefined.js
 extensions/TeX/AMSmath.js
 extensions/TeX/AMSsymbols.js
+extensions/TeX/mathchoice.js
 extensions/TeX/texvc.js
 extensions/TeX/color.js
 extensions/TeX/cancel.js
