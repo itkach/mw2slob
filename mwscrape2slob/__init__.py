@@ -82,7 +82,14 @@ NAMESPACES = {}
 def process_initializer(css_selectors, interwikimap, namespaces):
     logging.basicConfig()
     for css_selector in css_selectors:
-        SELECTORS.append(CSSSelector(css_selector))
+        if ':contains(' in css_selector:
+            #selectors using :contains() can't be reused,
+            #don't create instance here
+            SELECTORS.append(css_selector)
+        else:
+            #creating selector instances for each article
+            #appears to be expensive, create them once per process
+            SELECTORS.append(CSSSelector(css_selector))
     for item in interwikimap:
         prefix = item.get('prefix')
         url = item.get('url')
@@ -429,6 +436,8 @@ def convert(title, text, rtl, server, articlepath, args):
     convert_get_microformat(doc)
 
     for selector in SELECTORS:
+        if isinstance(selector, str):
+            selector = CSSSelector(selector)
         for item in selector(doc):
             item.drop_tree()
 
