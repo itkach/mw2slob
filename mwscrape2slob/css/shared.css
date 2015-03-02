@@ -1,3 +1,7 @@
+body {
+    background-color: white;
+}
+
 a[href ^="sftp://"],
 a[href ^="ftp://"],
 a[href ^="http://"],
