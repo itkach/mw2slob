@@ -19,7 +19,7 @@ rm $MJX_HOME/config/MediaWiki_${TYPE}.js
 $MJX_DEV_HOME/combiner/combineMJ $MJX_HOME
 
 mkdir -p $DEST/jax/output
-
+mkdir -p $DEST/extensions/TeX
 cd $MJX_HOME
 
 SYNC="rsync -aP"
@@ -43,6 +43,18 @@ $SYNC jax/output/${TYPE} \
 --exclude Latin-Modern \
 --exclude TeX \
 $DEST/jax/output/
+
+$SYNC extensions/TeX \
+--exclude noErrors.js \
+--exclude noUndefined.js \
+--exclude AMSmath.js \
+--exclude AMSsymbols.js \
+--exclude mathchoice.js \
+--exclude texvc.js \
+--exclude color.js \
+--exclude cancel.js \
+--exclude mediawiki-texvc.js \
+$DEST/extensions/
 
 if [ -d fonts/${TYPE}/STIX-Web/woff ]; then
     mkdir -p $DEST/fonts/${TYPE}/STIX-Web/
