@@ -501,6 +501,7 @@ def convert(title, text, rtl, server, articlepath, args):
         math_jax = ''
 
     result = ''.join((
+        '<script src="~/js/styleswitcher.js"></script>',
         '<link rel="stylesheet" href="~/css/shared.css" type="text/css">',
         '<link rel="stylesheet" href="~/css/mediawiki_shared.css" type="text/css">',
         '<link rel="stylesheet" href="~/css/mediawiki_monobook.css" type="text/css">',
