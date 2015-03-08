@@ -372,6 +372,9 @@ def convert_url(url, server=None, articlepath='/wiki/',
     >>> convert_url('/wiki/%D0%A4%D0%B0%D0%B9%D0%BB:ABC.gif', server='http://ru.wikipedia.org', namespaces={'Файл'})
     'http://ru.wikipedia.org/wiki/%D0%A4%D0%B0%D0%B9%D0%BB:ABC.gif'
 
+    >>> convert_url('http://images.uncyclomedia.co/uncyclopedia/en/thumb/a/ac/Melone-Cesare-Borgia-BR600.jpg/300px-Melone-Cesare-Borgia-BR600.jpg')
+    'http://images.uncyclomedia.co/uncyclopedia/en/thumb/a/ac/Melone-Cesare-Borgia-BR600.jpg/300px-Melone-Cesare-Borgia-BR600.jpg'
+
     """
     if namespaces is None:
         namespaces = NAMESPACES
@@ -407,6 +410,30 @@ def convert_url(url, server=None, articlepath='/wiki/',
             return urlunparse(parsed_interwiki.values())
     parsed['path'] = path.replace('/', '%2F')
     return urlunparse(parsed.values())
+
+def convert_srcset(value):
+    """
+    >>> convert_srcset('mdn-logo-HD.png 2x, mdn-logo-small.png 15w, mdn-banner-HD.png 100w 2x')
+    'mdn-logo-HD.png 2x, mdn-logo-small.png 15w, mdn-banner-HD.png 100w 2x'
+
+    >>> convert_srcset('//example.com/mdn-logo-HD.png 2x, //example.com/mdn-logo-small.png 15w')
+    'http://example.com/mdn-logo-HD.png 2x, http://example.com/mdn-logo-small.png 15w'
+
+    >>> convert_srcset('http://example.com/mdn-logo-HD.png 2x, //example.com/mdn-logo-small.png 15w')
+    'http://example.com/mdn-logo-HD.png 2x, http://example.com/mdn-logo-small.png 15w'
+
+    >>> convert_srcset('http://example.com/mdn-logo-HD.png 2x, http://example.com/mdn-logo-small.png 15w')
+    'http://example.com/mdn-logo-HD.png 2x, http://example.com/mdn-logo-small.png 15w'
+
+    """
+    parts = value.split(',')
+    converted = []
+    for part in parts:
+        if part.lstrip().startswith('//'):
+            converted.append(part.replace('//', 'http://', 1))
+        else:
+            converted.append(part)
+    return ','.join(converted)
 
 
 def convert_get_microformat(doc):
@@ -471,7 +498,9 @@ def convert(title, text, rtl, server, articlepath, args):
                                          articlepath=articlepath)
 
         if 'srcset' in item.attrib:
-            item.attrib['srcset'] = item.attrib['srcset'].replace('//', 'http://')
+            srcset = item.attrib['srcset']
+            if srcset:
+                item.attrib['srcset'] = convert_srcset(srcset)
 
     has_math = len(SEL_MATH(doc)) > 0
 
