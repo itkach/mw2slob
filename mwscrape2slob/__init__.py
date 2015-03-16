@@ -335,6 +335,7 @@ SEL_SRC = CSSSelector('[src]')
 SEL_ELEMENT_STYLE = CSSSelector('[style]')
 SEL_GEO_NONDEFAULT = CSSSelector('.geo-nondefault')
 SEL_GEO_MICROFORMAT = CSSSelector('.geo.microformat')
+SEL_GEO_GEO_DMS = CSSSelector('.geo-geo-dms')
 
 CLEANER = lxml.html.clean.Cleaner(
     comments=True,
@@ -444,8 +445,9 @@ def mkgeolink(latitude, longitude):
         href='geo:{},{}'.format(latitude.strip(), longitude.strip()))
 
 
-def convert_geo_microformat(doc):
-    for geo_nondefault in SEL_GEO_NONDEFAULT(doc):
+def convert_geo_microformat(doc, selector=SEL_GEO_NONDEFAULT,
+                            drop_parent_tree=True):
+    for geo_nondefault in selector(doc):
         geo_items = geo_nondefault.cssselect('.geo')
         for geo in geo_items:
             coords = geo.text
@@ -453,7 +455,11 @@ def convert_geo_microformat(doc):
                 latitude, longitude = coords.split(';', 1)
                 a = mkgeolink(latitude, longitude)
                 geo_nondefault.getparent().addnext(a)
-        geo_nondefault.drop_tree()
+        if drop_parent_tree:
+            geo_nondefault.drop_tree()
+        else:
+            for geo_dec in geo_nondefault.cssselect('.geo-dec'):
+                geo_dec.drop_tree()
 
 
 def convert_geo_microformat2(doc):
@@ -468,6 +474,12 @@ def convert_geo_microformat2(doc):
             geo.drop_tree()
 
 
+def convert_geo_microformat3(doc):
+    convert_geo_microformat(doc,
+                            selector=SEL_GEO_GEO_DMS,
+                            drop_parent_tree=False)
+
+
 def convert(title, text, rtl, server, articlepath, args):
 
     encoding = args.html_encoding if args else 'utf-8'
@@ -477,15 +489,14 @@ def convert(title, text, rtl, server, articlepath, args):
 
     CLEANER(doc)
 
-    try:
-        convert_geo_microformat(doc)
-    except Exception:
-        log.exception('Failed to convert geo')
+    for convert_geo in (convert_geo_microformat,
+                        convert_geo_microformat2,
+                        convert_geo_microformat3):
+        try:
+            convert_geo(doc)
+        except Exception:
+            log.exception('Failed to convert geo')
 
-    try:
-        convert_geo_microformat2(doc)
-    except Exception:
-        log.exception('Failed to convert geo ')
 
     for selector in SELECTORS:
         if isinstance(selector, str):
