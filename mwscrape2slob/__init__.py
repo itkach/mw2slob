@@ -152,12 +152,12 @@ class CouchArticleSource(collections.Sized):
 
         if not slb.tags.get('license.name'):
             slb.tag('license.name', rightsinfo['text'])
+
         if not slb.tags.get('license.url'):
             license_url = rightsinfo['url']
             if license_url.startswith('//'):
                 license_url = 'http:'+license_url
             slb.tag('license.url', license_url)
-
 
         articlepath = general_siteinfo.get('articlepath')
         if articlepath:
@@ -775,18 +775,28 @@ def main():
         noext, _ext = os.path.splitext(basename)
         outname = os.path.extsep.join((noext, args.compression, 'slob'))
 
+    def set_tag_from_args(slb, name):
+        value = getattr(args, name.replace('.', '_'))
+        if value:
+            slb.tag(name, value)
+
     with slob.create(outname,
                      compression=args.compression,
                      workdir=args.work_dir,
                      min_bin_size=args.bin_size*1024,
                      observer=observer) as slb:
         begin('content')
+        #create tags
+        slb.tag('license.name', '')
+        slb.tag('license.url', '')
+        slb.tag('created.by', '')
+        slb.tag('copyright', '')
         article_source = CouchArticleSource(args, slb)
         begin('all')
-        slb.tag('license.name', args.license_name)
-        slb.tag('license.url', args.license_url)
-        slb.tag('created.by', args.created_by)
-        slb.tag('copyright', '')
+        #command args override article source
+        set_tag_from_args(slb, 'license.name')
+        set_tag_from_args(slb, 'license.url')
+        set_tag_from_args(slb, 'created.by')
         content_dir = os.path.dirname(__file__)
         add_dir(slb, content_dir,
                 include_only={'js', 'css', 'images', 'MathJax'},
