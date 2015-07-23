@@ -390,6 +390,8 @@ def convert_url(url, server=None, articlepath='/wiki/',
         return urlunparse(parsed.values())
 
     path = parsed['path']
+    if parsed['query']:
+        path += '?' + parsed['query']
 
     if path.startswith(articlepath):
         path = path[len(articlepath):]
