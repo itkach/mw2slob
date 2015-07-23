@@ -706,31 +706,6 @@ def parse_args():
     return arg_parser.parse_args()
 
 
-
-def add_dir(slb, topdir, prefix='', include_only=None):
-    print('Adding', topdir)
-    for item in os.walk(topdir):
-        dirpath, _dirnames, filenames = item
-        for filename in filenames:
-            full_path = os.path.join(dirpath, filename)
-            rel_path = os.path.relpath(full_path, topdir)
-            if include_only and not any(
-                    rel_path.startswith(x) for x in include_only):
-                print ('SKIPPING (not included): {}'.format(rel_path))
-                continue
-            _, ext = os.path.splitext(filename)
-            ext = ext.lstrip(os.path.extsep)
-            content_type = MIME_TYPES.get(ext.lower())
-            if not content_type:
-                print('SKIPPING (unknown content type): {}'.format(rel_path))
-            else:
-                with open(full_path, 'rb') as f:
-                    content = f.read()
-                    key = prefix + rel_path
-                    print ('ADDING: {}'.format(key))
-                    slb.add(content, key, content_type=content_type)
-
-
 def main():
 
     logging.basicConfig()
@@ -798,12 +773,12 @@ def main():
         set_tag_from_args(slb, 'license.url')
         set_tag_from_args(slb, 'created.by')
         content_dir = os.path.dirname(__file__)
-        add_dir(slb, content_dir,
-                include_only={'js', 'css', 'images', 'MathJax'},
-                prefix='~/')
+        slob.add_dir(slb, content_dir,
+                     include_only={'js', 'css', 'images', 'MathJax'},
+                     prefix='~/')
         if args.content_dirs:
             for content_dir in args.content_dirs:
-                add_dir(slb, content_dir)
+                slob.add_dir(slb, content_dir)
         article_source.run()
 
     p('\nAll done in %s\n' % end('all'))
