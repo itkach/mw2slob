@@ -144,6 +144,7 @@ class CouchArticleSource(collections.Sized):
 
         self.interwikimap = siteinfo.get('interwikimap', [])
         self.namespaces = siteinfo.get('namespaces', {})
+
         general_siteinfo = siteinfo['general']
         sitename = general_siteinfo['sitename']
         sitelang = general_siteinfo['lang']
@@ -774,6 +775,9 @@ def main():
         set_tag_from_args(slb, 'license.name')
         set_tag_from_args(slb, 'license.url')
         set_tag_from_args(slb, 'created.by')
+
+        article_source.run()
+
         content_dir = os.path.dirname(__file__)
         slob.add_dir(slb, content_dir,
                      include_only={'js', 'css', 'images', 'MathJax'},
@@ -781,6 +785,6 @@ def main():
         if args.content_dirs:
             for content_dir in args.content_dirs:
                 slob.add_dir(slb, content_dir)
-        article_source.run()
+
 
     p('\nAll done in %s\n' % end('all'))
