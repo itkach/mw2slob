@@ -49,6 +49,6 @@ a:visited {
     color: #735A0A;
 }
 
-.toc {
-    background-color: #181205;
+#toc, .toc {
+    background-color: #181205 !important;
 }
