@@ -143,7 +143,15 @@ class CouchArticleSource(collections.Sized):
         self._metadata['siteinfo'] = siteinfo = siteinfo_couch[self.couch.name]
 
         self.interwikimap = siteinfo.get('interwikimap', [])
-        self.namespaces = siteinfo.get('namespaces', {})
+
+        article_namespaces = set(args.article_namespaces)
+
+        self.namespaces = {
+            ns.get('id'): ns for ns in siteinfo.get('namespaces', {}).values()
+            if ns.get('id') and not (
+                    ns.get('*') in article_namespaces or
+                    ns.get('canonical') in article_namespaces)
+        }
 
         general_siteinfo = siteinfo['general']
         sitename = general_siteinfo['sitename']
@@ -413,7 +421,7 @@ def convert_url(url, server=None, articlepath='/wiki/',
             if not parsed_interwiki['scheme']:
                 parsed_interwiki['scheme'] = 'http'
             return urlunparse(parsed_interwiki.values())
-    parsed['path'] = path.replace('/', '%2F')
+    parsed['path'] = path.replace('/', '%2F').replace(':', '%3A')
     return urlunparse(parsed.values())
 
 def convert_srcset(value):
@@ -705,6 +713,9 @@ def parse_args():
 
     arg_parser.add_argument('--content-dir', dest="content_dirs", nargs='+',
                             help=('Add content from directory, using full path as key'))
+
+    arg_parser.add_argument('--article-namespace', dest="article_namespaces", nargs='+',
+                            help=('Treat specified Mediawiki namespaces as articles'))
 
     return arg_parser.parse_args()
 
