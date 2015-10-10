@@ -359,8 +359,31 @@ CLEANER = lxml.html.clean.Cleaner(
     safe_attrs_only=False)
 
 
+
+IMG_EXTENSIONS = {'jpg', 'jpeg', 'png', 'svg', 'gif', 'bmp'}
+
+def is_image(path):
+    """
+    >>> is_image('/a/bb/ccc/file.jpg')
+    True
+
+    >>> is_image('/a/jpg')
+    False
+
+    >>> is_image('/a/jpg.pdf')
+    False
+
+    """
+    parts = path.rsplit('.', 1)
+    if len(parts) == 2:
+        ext = parts[1].lower()
+        return ext in IMG_EXTENSIONS
+    return False
+
+
 def convert_url(url, server=None, articlepath='/wiki/',
-                namespaces=None, interwiki=None):
+                namespaces=None, interwiki=None,
+                ensure_ext_image_urls=False):
     """
     >>> convert_url('/wiki/ABC#xyz')
     'ABC#xyz'
@@ -386,6 +409,9 @@ def convert_url(url, server=None, articlepath='/wiki/',
     >>> convert_url('http://images.uncyclomedia.co/uncyclopedia/en/thumb/a/ac/Melone-Cesare-Borgia-BR600.jpg/300px-Melone-Cesare-Borgia-BR600.jpg')
     'http://images.uncyclomedia.co/uncyclopedia/en/thumb/a/ac/Melone-Cesare-Borgia-BR600.jpg/300px-Melone-Cesare-Borgia-BR600.jpg'
 
+    >>> convert_url('/wiki/%D0%A4%D0%B0%D0%B9%D0%BB:ABC.gif', server='http://ru.wikipedia.org', ensure_ext_image_urls=True)
+    'http://ru.wikipedia.org/wiki/%D0%A4%D0%B0%D0%B9%D0%BB:ABC.gif'
+
     """
     if namespaces is None:
         namespaces = NAMESPACES
@@ -399,6 +425,10 @@ def convert_url(url, server=None, articlepath='/wiki/',
         return urlunparse(parsed.values())
 
     path = parsed['path']
+
+    if ensure_ext_image_urls and is_image(path):
+        return ''.join((server, url))
+
     if parsed['query']:
         path += '?' + parsed['query']
 
@@ -424,7 +454,7 @@ def convert_url(url, server=None, articlepath='/wiki/',
     parsed['path'] = path.replace('/', '%2F').replace(':', '%3A')
     return urlunparse(parsed.values())
 
-def convert_srcset(value):
+def convert_srcset(value, **kwargs):
     """
     >>> convert_srcset('mdn-logo-HD.png 2x, mdn-logo-small.png 15w, mdn-banner-HD.png 100w 2x')
     'mdn-logo-HD.png 2x, mdn-logo-small.png 15w, mdn-banner-HD.png 100w 2x'
@@ -442,11 +472,10 @@ def convert_srcset(value):
     parts = value.split(',')
     converted = []
     for part in parts:
-        if part.lstrip().startswith('//'):
-            converted.append(part.replace('//', 'http://', 1))
-        else:
-            converted.append(part)
-    return ','.join(converted)
+        subparts = part.strip().split(' ', 1)
+        subparts[0] = convert_url(subparts[0], **kwargs)
+        converted.append(' '.join(subparts))
+    return ', '.join(converted)
 
 
 def mkgeolink(latitude, longitude):
@@ -535,19 +564,27 @@ def convert(title, text, rtl, server, articlepath, args):
 
 
     for item in SEL_HREF(doc):
-        item.attrib['href'] = convert_url(item.attrib['href'],
-                                          server=server,
-                                          articlepath=articlepath)
+        item.attrib['href'] = convert_url(
+            item.attrib['href'],
+            server=server,
+            articlepath=articlepath,
+            ensure_ext_image_urls=args.ensure_ext_image_urls)
 
     for item in SEL_SRC(doc):
-        item.attrib['src'] = convert_url(item.attrib['src'],
-                                         server=server,
-                                         articlepath=articlepath)
+        item.attrib['src'] = convert_url(
+            item.attrib['src'],
+            server=server,
+            articlepath=articlepath,
+            ensure_ext_image_urls=args.ensure_ext_image_urls)
 
         if 'srcset' in item.attrib:
             srcset = item.attrib['srcset']
             if srcset:
-                item.attrib['srcset'] = convert_srcset(srcset)
+                item.attrib['srcset'] = convert_srcset(
+                    srcset,
+                    server=server,
+                    articlepath=articlepath,
+                    ensure_ext_image_urls=args.ensure_ext_image_urls)
 
     has_math = len(SEL_MATH(doc)) > 0
 
@@ -716,6 +753,10 @@ def parse_args():
 
     arg_parser.add_argument('--article-namespace', dest="article_namespaces", nargs='+',
                             help=('Treat specified Mediawiki namespaces as articles'))
+
+    arg_parser.add_argument('--ensure-ext-image-urls',
+                            action="store_true",
+                            help=('Convert internal image URLs to external URLs'))
 
     return arg_parser.parse_args()
 
