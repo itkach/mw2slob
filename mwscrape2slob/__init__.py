@@ -759,6 +759,11 @@ def parse_args():
                             action="store_true",
                             help=('Convert internal image URLs to external URLs'))
 
+    arg_parser.add_argument('--no-math',
+                            action="store_true",
+                            help=('Do not include MathJax resources into dictionary '
+                                  '(articles do not use math markup)'))
+
     return arg_parser.parse_args()
 
 
@@ -831,9 +836,14 @@ def main():
 
         article_source.run()
 
+        include_built_in = {'js', 'css', 'images'}
+
+        if not args.no_math:
+            include_built_in.add('MathJax')
+
         content_dir = os.path.dirname(__file__)
         slob.add_dir(slb, content_dir,
-                     include_only={'js', 'css', 'images', 'MathJax'},
+                     include_only=include_built_in,
                      prefix='~/')
         if args.content_dirs:
             for content_dir in args.content_dirs:
