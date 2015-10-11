@@ -150,7 +150,8 @@ class CouchArticleSource(collections.Sized):
             ns.get('id'): ns for ns in siteinfo.get('namespaces', {}).values()
             if ns.get('id') and not (
                     ns.get('*') in article_namespaces or
-                    ns.get('canonical') in article_namespaces)
+                    ns.get('canonical') in article_namespaces or
+                    str(ns.get('id')) in article_namespaces)
         }
 
         general_siteinfo = siteinfo['general']
