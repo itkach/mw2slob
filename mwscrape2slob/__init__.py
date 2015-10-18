@@ -144,7 +144,7 @@ class CouchArticleSource(collections.Sized):
 
         self.interwikimap = siteinfo.get('interwikimap', [])
 
-        article_namespaces = set(args.article_namespaces)
+        article_namespaces = set(args.article_namespaces or ())
 
         self.namespaces = {
             ns.get('id'): ns for ns in siteinfo.get('namespaces', {}).values()
