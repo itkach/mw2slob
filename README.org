@@ -96,6 +96,15 @@ optional arguments:
                         be removed from matching element's style attribute.
                         For example, to remove background from all elements
                         with style attributespecify selector [style]. Default:
+  --no-math
+                        Do not include MathJax resources into dictionary 
+                        (articles do not use math markup).
+  --article-namespace
+                        Treat specified Mediawiki namespaces as articles 
+  --ensure-ext-image-urls
+                        Convert internal image URLs to external URLs 
+  --article-namespace
+                        Treat specified Mediawiki namespaces as articles 
 
    #+END_SRC
 
