@@ -103,8 +103,6 @@ optional arguments:
                         Treat specified Mediawiki namespaces as articles 
   --ensure-ext-image-urls
                         Convert internal image URLs to external URLs 
-  --article-namespace
-                        Treat specified Mediawiki namespaces as articles 
 
    #+END_SRC
 
