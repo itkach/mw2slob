@@ -452,7 +452,7 @@ def convert_url(url, server=None, articlepath='/wiki/',
             if not parsed_interwiki['scheme']:
                 parsed_interwiki['scheme'] = 'http'
             return urlunparse(parsed_interwiki.values())
-    parsed['path'] = path.replace('/', '%2F').replace(':', '%3A')
+    parsed['path'] = path.replace('/', '%2F').replace(':', '%3A').replace('_', '%20')
     return urlunparse(parsed.values())
 
 def convert_srcset(value, **kwargs):
