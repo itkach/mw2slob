@@ -331,11 +331,12 @@ def safe_convert(params):
 
 NEWLINE_RE = re.compile(r'[\n]{2,}')
 
-SEL_IMG_TEX = CSSSelector('img.tex')
+SEL_IMG_TEX = CSSSelector('img.tex,img.mwe-math-fallback-image-inline')
 SEL_A_NEW = CSSSelector('a.new')
 SEL_A_HREF_CITE = CSSSelector('a[href^="#cite"]')
 SEL_A_IPA = CSSSelector('span.IPA>a')
 SEL_MATH = CSSSelector('img.tex, .mwe-math-fallback-png-display, '
+                       '.mwe-math-fallback-image-inline, '
                        '.mwe-math-fallback-png-inline, '
                        '.mwe-math-fallback-source-display,'
                        '.mwe-math-fallback-source-inline, '
