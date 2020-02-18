@@ -345,7 +345,7 @@ SEL_HREF = CSSSelector('[href]')
 SEL_SRC = CSSSelector('[src]')
 SEL_ELEMENT_STYLE = CSSSelector('[style]')
 SEL_GEO_NONDEFAULT = CSSSelector('.geo-nondefault')
-SEL_GEO_MICROFORMAT = CSSSelector('.geo.microformat')
+SEL_GEO_MICROFORMAT = CSSSelector('.geo')
 SEL_GEO_GEO_DMS = CSSSelector('.geo-geo-dms')
 
 CLEANER = lxml.html.clean.Cleaner(
