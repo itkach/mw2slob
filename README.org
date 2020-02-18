@@ -20,7 +20,7 @@
    #+END_SRC
 
    Create Python 3 virtual environment and install slob.py as
-   described at http://github.org/itkach/slob/.
+   described at https://github.com/itkach/slob/.
 
    In this virtual environment run
 
@@ -97,12 +97,12 @@ optional arguments:
                         For example, to remove background from all elements
                         with style attributespecify selector [style]. Default:
   --no-math
-                        Do not include MathJax resources into dictionary 
+                        Do not include MathJax resources into dictionary
                         (articles do not use math markup).
   --article-namespace
-                        Treat specified Mediawiki namespaces as articles 
+                        Treat specified Mediawiki namespaces as articles
   --ensure-ext-image-urls
-                        Convert internal image URLs to external URLs 
+                        Convert internal image URLs to external URLs
 
    #+END_SRC
 
