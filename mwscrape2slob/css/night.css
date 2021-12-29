@@ -52,3 +52,13 @@ a:visited {
 #toc, .toc {
     background-color: #181205 !important;
 }
+
+#content {
+        background-color: black;
+        color: #a0a0a0 !important;
+	border: 1px solid #555;
+}
+
+abbr, acronym, .explain {
+    color: #a0a0a0 !important;
+}
