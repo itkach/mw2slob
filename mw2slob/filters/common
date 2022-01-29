@@ -52,3 +52,5 @@ style
 .geo-multi-punct
 a.mw-headline-anchor
 .mwe-math-mathml-inline
+.nomobile
+.mw-collapsible.mw-collapsed

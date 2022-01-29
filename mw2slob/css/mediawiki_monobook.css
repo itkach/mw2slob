@@ -495,3 +495,58 @@ img.thumbborder {
 .ltr #bodyContent a.external {
 	padding-left: 0;
 }
+
+.mw-parser-output .locmap .od {
+  position: absolute;
+}
+
+.mw-parser-output .locmap .id {
+  position: absolute;
+  line-height: 0;
+}
+
+.infobox {
+    border: 1px solid #a2a9b1;
+    border-spacing: 3px;
+    background-color: #f8f9fa;
+    color: black;
+    /* @noflip */
+    margin: 0.5em 0 0.5em 1em;
+    padding: 0.2em;
+    /* @noflip */
+    float: right;
+    /* @noflip */
+    clear: right;
+    font-size: 88%;
+    line-height: 1.5em;
+    max-width: 22em;
+}
+
+@media only screen and (max-width: 480px) {
+    .infobox {
+        max-width: none;
+        width: 100% !important;
+    }
+}
+
+.mw-parser-output div.hatnote {
+    padding-left: 1.6em;
+    margin-top: 0.5em;
+    margin-bottom: 0.5em;
+}
+
+.mw-parser-output .hatnote {
+    font-style: italic;
+    font-size: smaller;
+}
+
+.mw-empty-elt {
+    display:none;
+}
+
+figcaption {
+    font-size: small;
+    text-align: justify;
+    margin-top: 0.5em;
+    margin-bottom: 1em;
+}

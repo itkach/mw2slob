@@ -1,115 +1,63 @@
-* mwscrape2slob
-  This is a tool to create [[https://github.com/itkach/slob][slob]] with content from a MediaWiki CouchDB
-  created by [[https://github.com/itkach/mwscrape][mwscrape]].
+* mw2slob
+  This is a tool to create MediaWiki content to
+  [[https://github.com/itkach/slob][slob]] dictionaries from
+  [[https://dumps.wikimedia.org/other/enterprise_html/][Wikimedia
+  Enterprise HTML Dumps]] or from CouchDB instances created by
+  [[https://github.com/itkach/mwscrape][mwscrape]].
+
+  Note that HTML dumps are different from HTML retrieved via
+  MediaWiki API (mwscrape), e.g. pages do not include table of
+  contents. Also, article title aliases from language links are only
+  available via ~mwscrape~.
 
 ** Installation
 
-   ``mwscrape2slob`` depends on the following components:
+   ``mw2slob`` depends on the following components:
 
    - [[http://github.org/itkach/slob/][Slob]]
    - [[https://github.com/djc/couchdb-python/][couchdb-python]]
    - [[http://lxml.de][lxml]]
    - [[https://pythonhosted.org/cssselect/][cssselect]]
-   - [[http://pythonhosted.org//cssutils/][cssutils]]
+   - [[http://pythonhosted.org/cssutils/][cssutils]]
+   - [[https://www.crummy.com/software/BeautifulSoup/][BeautifulSoup]]
 
    Install ``lxml`` (consult your operating system documentation for
-   installation instructions). For example, on Ubuntu 14.04:
+   installation instructions). For example, on Ubuntu:
 
    #+BEGIN_SRC sh
    sudo apt-get install python3-lxml
    #+END_SRC
 
-   Create Python 3 virtual environment and install slob.py as
+   Create Python virtual environment and install slob.py as
    described at https://github.com/itkach/slob/.
 
    In this virtual environment run
 
    #+BEGIN_SRC sh
-   pip install git+https://github.com/itkach/mwscrape2slob.git
+   pip install git+https://github.com/itkach/mw2slob.git
    #+END_SRC
 
 ** Usage
-   #+BEGIN_SRC sh
 
-usage: mwscrape2slob [-h] [-s STARTKEY] [-e ENDKEY] [-k KEY [KEY ...]]
-                     [-K KEY_FILE] [-f FILTER_FILE [FILTER_FILE ...]]
-                     [-F FILTER [FILTER ...]] [-o OUTPUT_FILE]
-                     [-c {lzma2,zlib}] [-b BIN_SIZE] [-u URI]
-                     [-l LICENSE_NAME] [-L LICENSE_URL]
-                     [-ll LANGLINKS [LANGLINKS ...]] [-a CREATED_BY]
-                     [-w WORK_DIR] [--filter-dir FILTER_DIR]
-                     [--html-encoding HTML_ENCODING]
-                     [--remove-embedded-bg REMOVE_EMBEDDED_BG]
-                     couch_url
+*** With WE HTML Dumps
+    #+BEGIN_SRC sh
+      # get site's metadata ("siteinfo")
+      mw2slob siteinfo http://en.wiktionary.org > enwikt.si.json
+      # compile dictionary
+      mw2slob dump --siteinfo enwikt.si.json ./enwiktionary-NS0-20220120-ENTERPRISE-HTML.json.tar.gz -f wikt common
+    #+END_SRC
 
-positional arguments:
-  couch_url             URL of CouchDB created by mwscrape to be used as input
+    See ~mw2slob dump --help~ for complete list of options.
 
-optional arguments:
-  -h, --help            show this help message and exit
-  -s STARTKEY, --startkey STARTKEY
-                        Skip articles with titles before this one when sorted
-  -e ENDKEY, --endkey ENDKEY
-                        Stop processing when this title is reached
-  -k KEY [KEY ...], --key KEY [KEY ...]
-                        Process specified keys only
-  -K KEY_FILE, --key-file KEY_FILE
-                        Process only keys specified in file
-  -f FILTER_FILE [FILTER_FILE ...], --filter-file FILTER_FILE [FILTER_FILE ...]
-                        Name of filter file. Filter file consists of CSS
-                        selectors (see cssselect documentation for description
-                        of supported selectors), one selector per line.
-  -F FILTER [FILTER ...], --filter FILTER [FILTER ...]
-                        CSS selectors for elements to exclude (see cssselect
-                        documentation for description of supported selectors)
-  -o OUTPUT_FILE, --output-file OUTPUT_FILE
-                        Name of output slob file
-  -c {lzma2,zlib}, --compression {lzma2,zlib}
-                        Name of compression to use. Default: lzma2
-  -b BIN_SIZE, --bin-size BIN_SIZE
-                        Minimum storage bin size in kilobytes. Default: 384
-  -u URI, --uri URI     Value for uri tag. Slob-specific article URLs such as
-                        bookmarks can be migrated to another slob based on
-                        matching "uri" tag values
-  -l LICENSE_NAME, --license-name LICENSE_NAME
-                        Value for license.name tag. This should be name under
-                        which the license is commonly known.
-  -L LICENSE_URL, --license-url LICENSE_URL
-                        Value for license.url tag. This should be a URL for
-                        license text
-  -ll LANGLINKS [LANGLINKS ...], --langlinks LANGLINKS [LANGLINKS ...]
-                        Include article titles from Wikipedia language links
-                        for these languages if available
-  -a CREATED_BY, --created-by CREATED_BY
-                        Value for created.by tag. Identifier (e.g. name or
-                        email) for slob file creator
-  -w WORK_DIR, --work-dir WORK_DIR
-                        Directory for temporary files created during
-                        compilation. Default: .
-  --filter-dir FILTER_DIR
-                        Directory where filter files are located. Default:
-                        filters directory in this package
-  --html-encoding HTML_ENCODING
-                        HTML text encoding. Default: utf-8
-  --remove-embedded-bg REMOVE_EMBEDDED_BG
-                        Comma separated list of CSS selectors. Background will
-                        be removed from matching element's style attribute.
-                        For example, to remove background from all elements
-                        with style attributespecify selector [style]. Default:
-  --no-math
-                        Do not include MathJax resources into dictionary
-                        (articles do not use math markup).
-  --article-namespace
-                        Treat specified Mediawiki namespaces as articles
-  --ensure-ext-image-urls
-                        Convert internal image URLs to external URLs
+*** With ~mwscrape~ database
 
-   #+END_SRC
-
-   For example, assuming CouchDB server runs at localhost on port
-   5984 and has mwscrape database named /simple-m-wikipedia-org/,
+   Assuming CouchDB server runs at localhost on port
+   ~5984~ and has mwscrape database created with ~mwscrape
+   simple.wikipedia.org~ and named /simple-wikipedia-org/,
    to create a slob using /common/ and /wiki/ content filters:
 
    #+BEGIN_SRC sh
-   mwscrape2slob http://127.0.0.1:5984/simple-m-wikipedia-org -f common wiki
+   mw2slob scrape http://127.0.0.1:5984/simple-wikipedia-org -f common wiki
    #+END_SRC
+
+   See ~mw2slob scrape --help~ for complete list of options
