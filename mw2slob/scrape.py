@@ -1,7 +1,7 @@
-import functools
 import itertools
 import logging
 import os
+from typing import Tuple
 from urllib.parse import urlparse
 
 import couchdb
@@ -19,7 +19,7 @@ def grouper(iterable, n, fillvalue=None):
     return itertools.zip_longest(fillvalue=fillvalue, *args)
 
 
-def mkcouch(couch_url) -> tuple[couchdb.Database, couchdb.Database]:
+def mkcouch(couch_url) -> Tuple[couchdb.Database, couchdb.Database]:
     parsed_url = urlparse(couch_url)
     couch_db = parsed_url.path.lstrip("/")
     server_url = parsed_url.scheme + "://" + parsed_url.netloc

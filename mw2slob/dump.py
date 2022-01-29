@@ -5,6 +5,7 @@ import tarfile
 from io import TextIOWrapper
 from typing import IO
 from typing import Iterable
+from typing import Tuple
 from typing import Union
 
 from . import convert
@@ -49,7 +50,7 @@ def get_siteinfo(args):
     return siteinfo_dict
 
 
-def parse_loc_spec(s: str) -> tuple[int, int]:
+def parse_loc_spec(s: str) -> Tuple[int, int]:
     if ":" in s:
         fileno, lineno = s.split(":")
         return int(fileno), int(lineno)
