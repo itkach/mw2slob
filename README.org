@@ -12,7 +12,8 @@
 
 ** Installation
 
-   ``mw2slob`` depends on the following components:
+   ~mw2slob~ requires Python 3.7 (or Python 3.6 + ~dataclasses~) or
+   newer and depends on the following components:
 
    - [[http://github.org/itkach/slob/][Slob]]
    - [[https://github.com/djc/couchdb-python/][couchdb-python]]
@@ -21,7 +22,11 @@
    - [[http://pythonhosted.org/cssutils/][cssutils]]
    - [[https://www.crummy.com/software/BeautifulSoup/][BeautifulSoup]]
 
-   Install ``lxml`` (consult your operating system documentation for
+   #+BEGIN_SRC sh
+   sudo apt-get install python3-lxml
+   #+END_SRC
+
+   Install ~lxml~ (consult your operating system documentation for
    installation instructions). For example, on Ubuntu:
 
    #+BEGIN_SRC sh
@@ -36,6 +41,14 @@
    #+BEGIN_SRC sh
    pip install git+https://github.com/itkach/mw2slob.git
    #+END_SRC
+
+   To work on Python 3.6 ~mw2slob~  requires installation of additional
+   dependency ~dataclasses~:
+   #+BEGIN_SRC sh
+   pip install dataclasses
+   #+END_SRC
+
+
 
 ** Usage
 
