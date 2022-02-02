@@ -134,6 +134,7 @@ def convert_url(
     namespaces=None,
     interwiki=None,
     ensure_ext_image_urls=False,
+    title=None,
 ):
     """
     >>> convert_url('/wiki/ABC#xyz')
@@ -169,6 +170,9 @@ def convert_url(
 
     >>> convert_url('/wiki/%D0%A4%D0%B0%D0%B9%D0%BB:ABC.gif', server='http://ru.wikipedia.org', ensure_ext_image_urls=True)
     'http://ru.wikipedia.org/wiki/%D0%A4%D0%B0%D0%B9%D0%BB:ABC.gif'
+
+    >>> convert_url('/wiki/Ab_Def#xyz', title='Ab Def')
+    '#xyz'
 
     """
     if site_articlepath is None:
@@ -211,7 +215,16 @@ def convert_url(
             if not parsed_interwiki["scheme"]:
                 parsed_interwiki["scheme"] = "http"
             return urlunparse(tuple(parsed_interwiki.values()))
-    parsed["path"] = path.replace("/", "%2F").replace(":", "%3A").replace("_", "%20")
+
+    if title and parsed["fragment"] and title.replace(" ", "_") == path:
+        # it's a footnote, get rid of article's own path -
+        # works in a browser but confuses aard2-android
+        parsed["path"] = ""
+    else:
+        parsed["path"] = (
+            path.replace("/", "%2F").replace(":", "%3A").replace("_", "%20")
+        )
+
     return urlunparse(tuple(parsed.values()))
 
 
@@ -328,6 +341,7 @@ def convert(
         ensure_ext_image_urls=ensure_ext_image_urls,
         namespaces=namespaces,
         interwiki=interwiki,
+        title=title,
     )
 
     x_srcset = functools.partial(
