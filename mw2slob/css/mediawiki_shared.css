@@ -40,7 +40,7 @@ body.ltr .thumbcaption { text-align:left; }
 body.ltr .magnify { float:right; }
 */
 
-/* Plainlinks - this can be used to switch 
+/* Plainlinks - this can be used to switch
  * off special external link styling */
 .plainlinks a {
 		background: none !important;
@@ -120,7 +120,7 @@ table.collapsed tr.collapsable {
 .TablePager { min-width: 80%; }
 .TablePager_nav a { text-decoration: none; }
 .TablePager { border-collapse: collapse; }
-.TablePager, .TablePager td, .TablePager th { 
+.TablePager, .TablePager td, .TablePager th {
 	border: 1px solid #aaaaaa;
 	padding: 0 0.15em 0 0.15em;
 }
@@ -192,3 +192,211 @@ table.mw_metadata td {
 	background-color: #fcfcfc;
 }
 
+/* Style for horizontal lists (separator following item).
+   @source mediawiki.org/wiki/Snippets/Horizontal_lists
+   @revision 8 (2016-05-21)
+   @author [[User:Edokter]]
+ */
+.hlist dl,
+.hlist ol,
+.hlist ul {
+	margin: 0;
+	padding: 0;
+}
+
+/* Display list items inline */
+.hlist dd,
+.hlist dt,
+.hlist li {
+	margin: 0; /* don't trust the note that says margin doesn't work with inline
+				* removing margin: 0 makes dds have margins again */
+	display: inline;
+}
+
+/* Display nested lists inline */
+.hlist.inline,
+.hlist.inline dl,
+.hlist.inline ol,
+.hlist.inline ul,
+.hlist dl dl,
+.hlist dl ol,
+.hlist dl ul,
+.hlist ol dl,
+.hlist ol ol,
+.hlist ol ul,
+.hlist ul dl,
+.hlist ul ol,
+.hlist ul ul {
+	display: inline;
+}
+
+/* Hide empty list items */
+.hlist .mw-empty-li {
+	display: none;
+}
+
+/* Generate interpuncts */
+.hlist dt:after {
+	content: ": ";
+}
+
+/**
+ * Note hlist style usage differs in Minerva and is defined in core as well!
+ * Please check Minerva desktop (and Minerva.css) when changing
+ * See https://phabricator.wikimedia.org/T213239
+ */
+.hlist dd:after,
+.hlist li:after {
+	content: " · ";
+	font-weight: bold;
+}
+
+.hlist dd:last-child:after,
+.hlist dt:last-child:after,
+.hlist li:last-child:after {
+	content: none;
+}
+
+/* Add parentheses around nested lists */
+.hlist dd dd:first-child:before,
+.hlist dd dt:first-child:before,
+.hlist dd li:first-child:before,
+.hlist dt dd:first-child:before,
+.hlist dt dt:first-child:before,
+.hlist dt li:first-child:before,
+.hlist li dd:first-child:before,
+.hlist li dt:first-child:before,
+.hlist li li:first-child:before {
+	content: " (";
+	font-weight: normal;
+}
+
+.hlist dd dd:last-child:after,
+.hlist dd dt:last-child:after,
+.hlist dd li:last-child:after,
+.hlist dt dd:last-child:after,
+.hlist dt dt:last-child:after,
+.hlist dt li:last-child:after,
+.hlist li dd:last-child:after,
+.hlist li dt:last-child:after,
+.hlist li li:last-child:after {
+	content: ")";
+	font-weight: normal;
+}
+
+/* Put ordinals in front of ordered list items */
+.hlist ol {
+	counter-reset: listitem;
+}
+
+.hlist ol > li {
+	counter-increment: listitem;
+}
+
+.hlist ol > li:before {
+	content: " " counter(listitem) "\a0";
+}
+
+.hlist dd ol > li:first-child:before,
+.hlist dt ol > li:first-child:before,
+.hlist li ol > li:first-child:before {
+	content: " (" counter(listitem) "\a0";
+}
+
+/* Unbulleted lists */
+.plainlist ol,
+.plainlist ul {
+	line-height: inherit;
+	list-style: none none;
+	margin: 0;
+}
+
+.plainlist ol li,
+.plainlist ul li {
+	margin-bottom: 0;
+}
+
+/* Infobox template style */
+.infobox {
+	border: 1px solid #a2a9b1;
+	border-spacing: 3px;
+	background-color: #f8f9fa;
+	color: black;
+	/* @noflip */
+	margin: 0.5em 0 0.5em 1em;
+	padding: 0.2em;
+	/* @noflip */
+	float: right;
+	/* @noflip */
+	clear: right;
+	font-size: 88%;
+	line-height: 1.5em;
+	width: 22em;
+}
+
+@media only screen and (max-width: 480px) {
+    .infobox {
+        max-width: none;
+        width: 100% !important;
+    }
+
+    .infobox .infobox-above,
+    .infobox caption {
+	display: none;
+    }
+}
+
+.infobox-header,
+.infobox-label,
+.infobox-above,
+.infobox-full-data,
+.infobox-data,
+.infobox-below,
+.infobox-subheader,
+.infobox-image,
+.infobox-navbar,
+/* Remove element selector when every .infobox thing is using the standard module/templates  */
+.infobox th,
+.infobox td {
+	vertical-align: top;
+}
+
+.infobox-label,
+.infobox-data,
+/* Remove element selector when every .infobox thing is using the standard module/templates  */
+.infobox th,
+.infobox td {
+	/* @noflip */
+	text-align: left;
+}
+
+/* Remove .infobox when element selectors above are removed */
+.infobox .infobox-above,
+.infobox .infobox-title,
+/* Remove element selector when every .infobox thing is using the standard module/templates  */
+.infobox caption {
+	font-size: 125%;
+	font-weight: bold;
+	text-align: center;
+}
+
+.infobox-title,
+/* Remove element selector when every .infobox thing is using the standard module/templates  */
+.infobox caption {
+	padding: 0.2em;
+}
+
+/* Remove .infobox when element selectors above are removed */
+.infobox .infobox-header,
+.infobox .infobox-subheader,
+.infobox .infobox-image,
+.infobox .infobox-full-data,
+.infobox .infobox-below {
+	text-align: center;
+}
+
+/* Remove .infobox when element selectors above are removed */
+.infobox .infobox-navbar {
+	/* @noflip */
+	text-align: right;
+}
