@@ -12,7 +12,6 @@
 #page-actions
 #sisterproject
 #siteNotice
-.audiotable
 .autocollapse
 .catlinks
 .cmbox
@@ -41,7 +40,6 @@
 .stub
 .tmbox
 .vertical-navbox
-a[href$=".ogg"]
 div:empty
 p:empty
 script
