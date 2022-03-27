@@ -71,6 +71,7 @@ SEL_WITH_ATTR_TYPEOF = CSSSelector("[typeof]")
 SEL_WITH_ATTR_ABOUT = CSSSelector("[about]")
 SEL_WITH_ATTR_TITLE = CSSSelector("[title]")
 SEL_A_WITH_ATTR_REL = CSSSelector("a[rel]")
+SEL_A_AUTONUMBER = CSSSelector("a.autonumber")
 SEL_LINKS_ELEMENTS = CSSSelector("link")
 
 CLEANER = lxml.html.clean.Cleaner(
@@ -398,6 +399,11 @@ def convert(
 
     for item in SEL_HREF(doc):
         item.attrib["href"] = x_url(item.attrib["href"])
+
+    for i, item in enumerate(SEL_A_AUTONUMBER(doc)):
+        # a elements with "autonumber" class are not actually autonumbered in enterprise dumps
+        if not item.text:
+            item.text = f"[{i + 1}]"
 
     for item in SEL_SRC(doc):
         item.attrib["src"] = x_url(item.attrib["src"])
