@@ -29,6 +29,32 @@ table.translations {
     border-collapse: collapse;
 }
 
+table.standard th, table.wide th, table.standart th {
+  background-color: maroon;
+  color: #ccc;
+}
+
+tr.bright th {
+  background-color: #FBECCA;
+  color: black;
+}
+
+table td.dark {
+  background-color: maroon;
+  color: #ccc;
+}
+
+.infobox th {
+    background-color: maroon !important;
+    color: #ccc !important;
+}
+
+.infobox td {
+    background-color: #2F313C !important;
+    color: #bbb !important;
+}
+
+
 .wikitable th {
     background-color: #292929 !important;
 }
@@ -61,4 +87,8 @@ a:visited {
 
 abbr, acronym, .explain {
     color: #a0a0a0 !important;
+}
+
+li.gallerybox div.thumb {
+    background-color: #2F313C;
 }

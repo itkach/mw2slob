@@ -400,3 +400,83 @@ table.mw_metadata td {
 	/* @noflip */
 	text-align: right;
 }
+
+li.gallerybox {
+		vertical-align: top;
+		border: solid 2px white;
+		display: -moz-inline-box;
+		display: inline-block;
+	}
+
+ul.gallery,
+li.gallerybox {
+    zoom: 1;
+    *display: inline;
+}
+
+ul.gallery {
+    margin: 2px;
+    padding: 2px;
+    display: block;
+}
+
+li.gallerycaption {
+    font-weight: bold;
+    text-align: center;
+    display: block;
+    word-wrap: break-word;
+}
+
+li.gallerybox div.thumb {
+    text-align: center;
+    border: 1px solid #ccc;
+    background-color: #f9f9f9;
+    margin: 2px;
+}
+
+li.gallerybox div.thumb img {
+    display: block;
+    margin: 0 auto;
+}
+
+div.gallerytext {
+    overflow: hidden;
+    font-size: 94%;
+    padding: 2px 4px;
+    word-wrap: break-word;
+}
+
+/*enterprise dump html has span here instead of div with inline style */
+li.gallerybox div.thumb span {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  height: 100%;
+  max-height: 240px;
+}
+
+.noprint {
+    margin-top: 1em;
+    font-size: small;
+
+}
+
+/*ruwiki uses these classes to position dot markers over maps */
+.mw-parser-output .ts-ПозКарта-метка {
+  font-size: 88%;
+  line-height: 1.2em;
+  position: absolute;
+  z-index: 2;
+}
+
+.mw-parser-output .ts-ПозКарта-метка-точка {
+  position: relative;
+  float: left;
+  line-height: 0;
+}
+
+.mw-parser-output .ts-ПозКарта-метка-ссылка {
+  position: absolute;
+  width: 156px;
+  top: -0.5em;
+}

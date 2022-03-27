@@ -526,3 +526,121 @@ figcaption {
     margin-top: 0.5em;
     margin-bottom: 1em;
 }
+
+.toccolours {
+	border: 1px solid #aaa;
+	background-color: #f9f9f9;
+	padding: 5px;
+	font-size: 95%;
+}
+
+table.simple {
+    border-color:rgb(170,170,170);
+    border-collapse:collapse
+}
+table.simple th,
+table.simple td {
+    border-color:rgb(170,170,170);
+    padding-left:0.2em;
+    padding-right:0.2em
+}
+table.standard,
+table.wide,
+table.standart {
+    border:1px solid rgb(170,170,170);
+    border-collapse:collapse
+}
+table.standard th,
+table.wide th,
+table.standart th {
+    border:1px solid rgb(170,170,170);
+    padding-left:0.2em;
+    padding-right:0.2em;
+    background-color:#EEEEFF
+}
+table.standard td,
+table.wide td,
+table.standart td {
+    border:1px solid rgb(170,170,170);
+    padding-left:0.2em;
+    padding-right:0.2em
+}
+table.standard caption,
+table.wide caption,
+table.standart caption,
+table.tiles caption {
+    font-weight:bold;
+    padding-top:0.2em;
+    padding-bottom:0.2em
+}
+table.wide {
+    width:100%
+}
+table.tiles {
+    border-collapse:separate;
+    border-spacing:2px
+}
+table.tiles th {
+    padding-left:0.2em;
+    padding-right:0.2em;
+    background-color:#EEEEFF
+}
+table.tiles td {
+    padding-left:0.2em;
+    padding-right:0.2em;
+    background-color:#F0F0F0
+}
+tr.highlight th {
+    background-color:#EEEEFF
+}
+tr.highlight td {
+    background-color:#FFFFEE
+}
+tr.bright th {
+    background-color:#CCCCFF
+}
+tr.bright td {
+    background-color:#FFEECC
+}
+tr.shadow th {
+    background-color:#F0F0F0
+}
+tr.shadow td {
+    background-color:#F0F0F0
+}
+tr.dark th {
+    background-color:#CCCCCC
+}
+tr.dark td {
+    background-color:#CCCCCC
+}
+table th.highlight {
+    background-color:#EEEEFF
+}
+table td.highlight {
+    background-color:#FFFFEE
+}
+table th.bright {
+    background-color:#CCCCFF
+}
+table td.bright {
+    background-color:#FFEECC
+}
+table th.shadow {
+    background-color:#F0F0F0
+}
+table td.shadow {
+    background-color:#F0F0F0
+}
+table th.dark {
+    background-color:#CCCCCC
+}
+table td.dark {
+    background-color:#CCCCCC
+}
+table th.transparent {
+    background-color:transparent
+}
+table td.transparent {
+    background-color:transparent
+}
