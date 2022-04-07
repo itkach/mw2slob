@@ -1,6 +1,7 @@
 import collections
 import functools
 import logging
+import math
 import re
 from typing import Iterable
 from typing import Mapping
@@ -73,6 +74,7 @@ SEL_WITH_ATTR_TITLE = CSSSelector("[title]")
 SEL_A_WITH_ATTR_REL = CSSSelector("a[rel]")
 SEL_A_AUTONUMBER = CSSSelector("a.autonumber")
 SEL_LINKS_ELEMENTS = CSSSelector("link")
+SEL_A_MAP = CSSSelector("a.mw-kartographer-map")
 
 CLEANER = lxml.html.clean.Cleaner(
     comments=True,
@@ -125,6 +127,16 @@ def mk_ext_url(server, articlepath, site_articlepath, relative_url):
     return "".join(
         (server, replace_article_path(articlepath, site_articlepath, relative_url))
     )
+
+
+# Calculate Openstreet map tile coordinates x and y from geo coordinates
+# https://wiki.openstreetmap.org/wiki/Slippy_map_tilenames#Lon..2Flat._to_tile_numbers_2
+def deg2num(lat_deg, lon_deg, zoom):
+    lat_rad = math.radians(lat_deg)
+    n = 2.0 ** zoom
+    xtile = int((lon_deg + 180.0) / 360.0 * n)
+    ytile = int((1.0 - math.asinh(math.tan(lat_rad)) / math.pi) / 2.0 * n)
+    return (xtile, ytile)
 
 
 def convert_url(
@@ -294,6 +306,28 @@ def convert_geo_microformat3(doc):
     convert_geo_microformat(doc, selector=SEL_GEO_GEO_DMS, drop_parent_tree=False)
 
 
+def convert_map(doc, selector=SEL_A_MAP):
+    for item in selector(doc):
+        try:
+            lat = float(item.attrib.pop("data-lat"))
+            lon = float(item.attrib.pop("data-lon"))
+            zoom = int(item.attrib.pop("data-zoom"))
+            xtile, ytile = deg2num(lat, lon, zoom)
+            tile_url = f"https://tile.openstreetmap.org/{zoom}/{xtile}/{ytile}.png"
+            map_url = f"https://www.openstreetmap.org/#map={zoom}/{lat}/{lon}"
+            item.attrib["href"] = map_url
+            item.attrib["target"] = "_blank"
+            item.attrib.pop("data-overlays")
+            item.attrib.pop("data-style")
+            item.attrib.pop("data-height")
+            item.attrib.pop("data-width")
+            for img in item.cssselect("img"):
+                img.attrib.pop("srcset", None)
+                img.attrib["src"] = tile_url
+        except Exception:
+            log.exception("Failed to convert map")
+
+
 MATH_JAX_SCRIPTS = (
     '<script src="~/js/jquery-2.1.3.min.js"></script>'
     '<script src="~/MathJax/MathJax.js"></script>'
@@ -396,6 +430,8 @@ def convert(
                 ss.backgroundColor = None
                 ss.background = None
                 item.attrib["style"] = ss.cssText
+
+    convert_map(doc)
 
     for item in SEL_HREF(doc):
         item.attrib["href"] = x_url(item.attrib["href"])
