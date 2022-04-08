@@ -1,5 +1,5 @@
 * mw2slob
-  This is a tool to create MediaWiki content to
+  This is a tool to convert MediaWiki content to
   [[https://github.com/itkach/slob][slob]] dictionaries from
   [[https://dumps.wikimedia.org/other/enterprise_html/][Wikimedia
   Enterprise HTML Dumps]] or from CouchDB instances created by
