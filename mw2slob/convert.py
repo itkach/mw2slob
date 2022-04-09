@@ -326,6 +326,8 @@ def convert_map(doc, selector=SEL_A_MAP):
                 img.attrib["src"] = tile_url
         except Exception:
             log.exception("Failed to convert map")
+            # log.error(lxml.html.tostring(item, encoding="unicode"))
+            item.drop_tree()
 
 
 MATH_JAX_SCRIPTS = (
