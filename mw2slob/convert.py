@@ -363,7 +363,6 @@ def mktoc(doc, summary_child):
         E.OL(*toc_elements),
         id="a2-toc",
     )
-    doc.body.insert(0, toc)
 
 
 MATH_JAX_SCRIPTS = (
@@ -530,12 +529,13 @@ def convert(
             a.text = title
             title_heading = E.SPAN(id="a2-title")
             title_heading.append(a)
-            body = doc.find("body")
-            if not body is None:
-                body.insert(0, title_heading)
-            else:
-                doc.insert(0, title_heading)
-        mktoc(doc, title_heading)
+
+        toc = mktoc(doc, title_heading)
+        body = doc.find("body")
+        if not body is None:
+            body.insert(0, toc)
+        else:
+            doc.insert(0, toc)
 
     for item in SEL_LINKS_ELEMENTS(doc):
         item.drop_tree()
