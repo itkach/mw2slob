@@ -274,7 +274,7 @@ def convert_srcset(value, **kwargs):
 
 def mkgeolink(latitude, longitude):
     return E.A(
-        E.IMG(E.CLASS("mwscrape2slob-geo-link-icon"), src="~/images/Globe.svg"),
+        E.IMG(E.CLASS("a2-geo-link-icon"), src="~/images/Globe.svg"),
         href="geo:{},{}".format(latitude.strip(), longitude.strip()),
     )
 
