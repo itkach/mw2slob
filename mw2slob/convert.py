@@ -523,17 +523,9 @@ def convert(
         else:
             article_url = "".join((server, site_articlepath, quote(title)))
         a = E.A(id="view-online-link", href=article_url)
-        title_heading = doc.cssselect("h1")
-        if len(title_heading) > 0:
-            title_heading = title_heading[0]
-            if title_heading.text:
-                a.text = title_heading.text
-                title_heading.text = ""
-                title_heading.append(a)
-        else:
-            a.text = title
-            title_heading = E.SPAN(id="a2-title")
-            title_heading.append(a)
+        a.text = title
+        title_heading = E.SPAN(id="a2-title")
+        title_heading.append(a)
 
         mw_toc = doc.cssselect("#toc")
         toc_details = (
