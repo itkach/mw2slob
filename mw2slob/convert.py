@@ -17,6 +17,8 @@ from lxml.cssselect import CSSSelector
 from lxml.html import builder as E
 from lxml.html.soupparser import fromstring
 
+EM = E.ElementMaker()
+
 CSSSelector = functools.partial(CSSSelector, translator="html")
 
 log = logging.getLogger(__name__)
@@ -75,6 +77,9 @@ SEL_A_WITH_ATTR_REL = CSSSelector("a[rel]")
 SEL_A_AUTONUMBER = CSSSelector("a.autonumber")
 SEL_LINKS_ELEMENTS = CSSSelector("link")
 SEL_A_MAP = CSSSelector("a.mw-kartographer-map")
+
+SEL_H2 = CSSSelector("h2")
+SEL_H3 = CSSSelector("h3")
 
 CLEANER = lxml.html.clean.Cleaner(
     comments=True,
@@ -330,6 +335,33 @@ def convert_map(doc, selector=SEL_A_MAP):
             item.drop_tree()
 
 
+def mktoc(doc, summary_child):
+    toc_elements = []
+    for h2 in SEL_H2(doc):
+        h2_id = h2.attrib.get("id")
+        for empty_span in h2.cssselect("span:empty"):
+            empty_span.drop_tree()
+        if h2_id:
+            parent = h2.getparent()
+            sub_items = []
+            for h3 in SEL_H3(parent):
+                h3_id = h3.attrib.get("id")
+                if h3_id:
+                    toc_item_sub = E.LI(E.A(h3.text_content(), href=f"#{h3_id}"))
+                    sub_items.append(toc_item_sub)
+            sub_items_list = (E.UL(*sub_items),) if sub_items else ()
+            toc_item = E.LI(E.A(h2.text_content(), href=f"#{h2_id}"), *sub_items_list)
+            toc_elements.append(toc_item)
+
+    toc = EM(
+        "details",
+        EM("summary", E.SPAN(id="a2-toc-spacer"), summary_child),
+        E.UL(*toc_elements),
+        id="a2-toc",
+    )
+    doc.body.insert(0, toc)
+
+
 MATH_JAX_SCRIPTS = (
     '<script src="~/js/jquery-2.1.3.min.js"></script>'
     '<script src="~/MathJax/MathJax.js"></script>'
@@ -499,6 +531,7 @@ def convert(
                 body.insert(0, title_heading)
             else:
                 doc.insert(0, title_heading)
+        mktoc(doc, title_heading)
 
     for item in SEL_LINKS_ELEMENTS(doc):
         item.drop_tree()
