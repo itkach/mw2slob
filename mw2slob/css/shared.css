@@ -57,6 +57,8 @@ a[href ^="https://"] {
 
 #a2-toc ol {
     counter-reset: item;
+    margin-left: 0;
+    margin-right: 0;
 }
 
 #a2-toc li:before {

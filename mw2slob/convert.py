@@ -357,10 +357,10 @@ def mktoc(doc, summary_child):
             toc_item = E.LI(E.A(h2.text_content(), href=f"#{h2_id}"), *sub_items_list)
             toc_elements.append(toc_item)
 
-    toc = EM(
+    return EM(
         "details",
         EM("summary", E.SPAN(id="a2-toc-spacer"), summary_child),
-        E.OL(*toc_elements),
+        E.OL(*toc_elements, E.CLASS("toc")),
         id="a2-toc",
     )
 
