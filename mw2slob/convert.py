@@ -524,7 +524,7 @@ def convert(
                 title_heading.append(a)
         else:
             a.text = title
-            title_heading = E.H1()
+            title_heading = E.SPAN(id="a2-title")
             title_heading.append(a)
             body = doc.find("body")
             if not body is None:
