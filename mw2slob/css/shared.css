@@ -37,9 +37,10 @@ a[href ^="https://"] {
     white-space: nowrap;
 }
 
-#a2-toc > summary {
+#a2-article-header > summary {
     cursor: pointer;
     margin: 0;
+    margin-bottom: 0.5em;
     border-bottom: 1px solid #aaa;
     padding-top: .5em;
     padding-bottom: .17em;
@@ -59,6 +60,8 @@ a[href ^="https://"] {
     counter-reset: item;
     margin-left: 0;
     margin-right: 0;
+    padding-left: 1em;
+    padding-right: 1em;
 }
 
 #a2-toc li:before {

@@ -339,7 +339,7 @@ def convert_map(doc, selector=SEL_A_MAP):
             item.drop_tree()
 
 
-def mktoc(doc, summary_child):
+def mktoc_elements(doc):
     toc_elements = []
     for h2 in SEL_H2(doc):
         h2_id = h2.attrib.get("id")
@@ -356,12 +356,17 @@ def mktoc(doc, summary_child):
             sub_items_list = (E.OL(*sub_items),) if sub_items else ()
             toc_item = E.LI(E.A(h2.text_content(), href=f"#{h2_id}"), *sub_items_list)
             toc_elements.append(toc_item)
+    toc_elements.append(E.CLASS("toc"))
+    return toc_elements
 
+
+def mktoc(summary_child, details):
+    detail_elements = (details,) if details.getchildren() else ()
     return EM(
         "details",
         EM("summary", E.SPAN(id="a2-toc-spacer"), summary_child),
-        E.OL(*toc_elements, E.CLASS("toc")),
-        id="a2-toc",
+        *detail_elements,
+        id="a2-article-header",
     )
 
 
@@ -530,7 +535,11 @@ def convert(
             title_heading = E.SPAN(id="a2-title")
             title_heading.append(a)
 
-        toc = mktoc(doc, title_heading)
+        mw_toc = doc.cssselect("#toc")
+        toc_details = (
+            mw_toc[0] if mw_toc else E.DIV(E.OL(*mktoc_elements(doc)), id="a2-toc")
+        )
+        toc = mktoc(title_heading, toc_details)
         body = doc.find("body")
         if not body is None:
             body.insert(0, toc)
