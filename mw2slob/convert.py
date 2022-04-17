@@ -349,14 +349,14 @@ def mktoc(doc, summary_child):
                 if h3_id:
                     toc_item_sub = E.LI(E.A(h3.text_content(), href=f"#{h3_id}"))
                     sub_items.append(toc_item_sub)
-            sub_items_list = (E.UL(*sub_items),) if sub_items else ()
+            sub_items_list = (E.OL(*sub_items),) if sub_items else ()
             toc_item = E.LI(E.A(h2.text_content(), href=f"#{h2_id}"), *sub_items_list)
             toc_elements.append(toc_item)
 
     toc = EM(
         "details",
         EM("summary", E.SPAN(id="a2-toc-spacer"), summary_child),
-        E.UL(*toc_elements),
+        E.OL(*toc_elements),
         id="a2-toc",
     )
     doc.body.insert(0, toc)

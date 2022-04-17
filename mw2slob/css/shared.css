@@ -54,3 +54,21 @@ a[href ^="https://"] {
     display: inline-block;
     width: 1em;
 }
+
+#a2-toc ol {
+    counter-reset: item;
+}
+
+#a2-toc li:before {
+    content: counters(item, ".") " ";
+    counter-increment: item;
+    padding: 4px;
+}
+
+#a2-toc li {
+    display: block;
+}
+
+#a2-title {
+    font-size: 188%;
+}
