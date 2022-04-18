@@ -356,11 +356,12 @@ def mktoc_elements(doc):
             sub_items_list = (E.OL(*sub_items),) if sub_items else ()
             toc_item = E.LI(E.A(h2.text_content(), href=f"#{h2_id}"), *sub_items_list)
             toc_elements.append(toc_item)
-    toc_elements.append(E.CLASS("toc"))
+    if len(toc_elements) > 0:
+        toc_elements.append(E.CLASS("toc"))
     return toc_elements
 
 
-def mktoc(summary_child, details):
+def mk_article_header(summary_child, details):
     detail_elements = (details,) if details.getchildren() else ()
     return EM(
         "details",
@@ -528,10 +529,13 @@ def convert(
         title_heading.append(a)
 
         mw_toc = doc.cssselect("#toc")
-        toc_details = (
-            mw_toc[0] if mw_toc else E.DIV(E.OL(*mktoc_elements(doc)), id="a2-toc")
-        )
-        toc = mktoc(title_heading, toc_details)
+
+        def mktoc():
+            toc_elements = mktoc_elements(doc)
+            return E.DIV(E.OL(*toc_elements), id="a2-toc") if toc_elements else E.DIV()
+
+        toc_details = mw_toc[0] if mw_toc else mktoc()
+        toc = mk_article_header(title_heading, toc_details)
         body = doc.find("body")
         if not body is None:
             body.insert(0, toc)
