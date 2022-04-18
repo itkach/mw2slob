@@ -3,6 +3,7 @@ import functools
 import logging
 import math
 import re
+import typing
 from typing import Iterable
 from typing import Mapping
 from urllib.parse import quote
@@ -339,23 +340,26 @@ def convert_map(doc, selector=SEL_A_MAP):
             item.drop_tree()
 
 
-def mktoc_elements(doc):
+def mktoc_level(container, level) -> typing.List:
     toc_elements = []
-    for h2 in SEL_H2(doc):
-        h2_id = h2.attrib.get("id")
-        for empty_span in h2.cssselect("span:empty"):
+    if level > 4:
+        return toc_elements
+    selectH = CSSSelector(f"h{level}")
+    for h in selectH(container):
+        h_id = h.attrib.get("id")
+        for empty_span in h.cssselect("span:empty"):
             empty_span.drop_tree()
-        if h2_id:
-            parent = h2.getparent()
-            sub_items = []
-            for h3 in SEL_H3(parent):
-                h3_id = h3.attrib.get("id")
-                if h3_id:
-                    toc_item_sub = E.LI(E.A(h3.text_content(), href=f"#{h3_id}"))
-                    sub_items.append(toc_item_sub)
+        if h_id:
+            parent = h.getparent()
+            sub_items = mktoc_level(parent, level + 1)
             sub_items_list = (E.OL(*sub_items),) if sub_items else ()
-            toc_item = E.LI(E.A(h2.text_content(), href=f"#{h2_id}"), *sub_items_list)
+            toc_item = E.LI(E.A(h.text_content(), href=f"#{h_id}"), *sub_items_list)
             toc_elements.append(toc_item)
+    return toc_elements
+
+
+def mktoc_elements(doc):
+    toc_elements = mktoc_level(doc, 2)
     if len(toc_elements) > 0:
         toc_elements.append(E.CLASS("toc"))
     return toc_elements
