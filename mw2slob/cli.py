@@ -81,7 +81,7 @@ def run(outname, info, articles, args):
 def cli_dump(args):
     outname = dump.get_outname(args)
     siteinfo_dict = dump.get_siteinfo(args)
-    info = siteinfo.info(siteinfo_dict)
+    info = siteinfo.info(siteinfo_dict, args.local_namespaces)
     articles = dump.articles(args, info)
     run(outname, info, articles, args)
 
@@ -89,7 +89,7 @@ def cli_dump(args):
 def cli_scrape(args):
     outname = scrape.get_outname(args)
     siteinfo_dict = scrape.get_siteinfo(args)
-    info = siteinfo.info(siteinfo_dict)
+    info = siteinfo.info(siteinfo_dict, args.local_namespaces)
     articles = scrape.articles(args, info)
     run(outname, info, articles, args)
 
@@ -252,10 +252,12 @@ def arg_parser():
     )
 
     base_parser.add_argument(
-        "--article-namespace",
-        dest="article_namespaces",
+        "--local-namespace",
+        dest="local_namespaces",
         nargs="+",
-        help=("Treat specified Mediawiki namespaces as articles"),
+        help=(
+            "Treat specified Mediawiki namespaces as local (do not convert to external links)"
+        ),
     )
 
     base_parser.add_argument(

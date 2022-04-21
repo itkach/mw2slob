@@ -47,17 +47,16 @@ class Info:
     namespaces: Mapping[str, dict] = field(default_factory=dict)
 
 
-def info(siteinfo: Mapping, article_namespaces: Iterable[str] = ()) -> Info:
-    article_namespaces = set(article_namespaces or ())
-
+def info(siteinfo: Mapping, local_namespaces: Iterable[str] = ()) -> Info:
+    local_namespaces = set(local_namespaces or ())
     namespaces = {
         ns.get("id"): ns
         for ns in siteinfo.get("namespaces", {}).values()
         if ns.get("id")
         and not (
-            ns.get("*") in article_namespaces
-            or ns.get("canonical") in article_namespaces
-            or str(ns.get("id")) in article_namespaces
+            ns.get("*") in local_namespaces
+            or ns.get("canonical") in local_namespaces
+            or str(ns.get("id")) in local_namespaces
         )
     }
     general_siteinfo = siteinfo["general"]
