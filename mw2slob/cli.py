@@ -1,4 +1,5 @@
 import argparse
+import itertools
 import json
 import logging
 import os
@@ -82,15 +83,48 @@ def cli_dump(args):
     outname = dump.get_outname(args)
     siteinfo_dict = dump.get_siteinfo(args)
     info = siteinfo.info(siteinfo_dict, args.local_namespaces)
-    articles = dump.articles(args, info)
-    run(outname, info, articles, args)
+    dump_files = []
+    couch_urls = []
+    for name in args.dump_file:
+        if name.startswith("http://") or name.startswith("https://"):
+            try:
+                scrape.mkcouch(name)  # validate url actually points to existing db
+            except:
+                logging.getLogger(__loader__.name).error(f"Invalid CouchDB URL: {name}")
+                raise
+            else:
+                couch_urls.append(name)
+        else:
+            dump_files.append(name)
+    scrape_articles = [scrape.articles(couch_url, info) for couch_url in couch_urls]
+    dump_articles = dump.articles(
+        dump_files,
+        info,
+        start_line_spec=args.start_line,
+        end_line_spec=args.end_line,
+        html_encoding=args.html_encoding,
+        remove_embedded_bg=args.remove_embedded_bg,
+        ensure_ext_image_urls=args.ensure_ext_image_urls,
+    )
+    run(outname, info, itertools.chain(*scrape_articles, dump_articles), args)
 
 
 def cli_scrape(args):
     outname = scrape.get_outname(args)
     siteinfo_dict = scrape.get_siteinfo(args)
     info = siteinfo.info(siteinfo_dict, args.local_namespaces)
-    articles = scrape.articles(args, info)
+    articles = scrape.articles(
+        args.couch_url,
+        info,
+        startkey=args.startkey,
+        endkey=args.endkey,
+        key=args.key,
+        key_file=args.key_file,
+        langlinks=args.langlinks,
+        html_encoding=args.html_encoding,
+        remove_embedded_bg=args.remove_embedded_bg,
+        ensure_ext_image_urls=args.ensure_ext_image_urls,
+    )
     run(outname, info, articles, args)
 
 

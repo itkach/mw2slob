@@ -1,6 +1,8 @@
 import itertools
 import logging
 import os
+from typing import Optional
+from typing import Sequence
 from typing import Tuple
 from urllib.parse import urlparse
 
@@ -27,15 +29,20 @@ def mkcouch(couch_url) -> Tuple[couchdb.Database, couchdb.Database]:
     return server[couch_db], server["siteinfo"]
 
 
-def articles(args, info: si.Info):
+def articles(
+    couch_url: str,
+    info: si.Info,
+    startkey: Optional[str] = None,
+    endkey: Optional[str] = None,
+    key: Optional[str] = None,
+    key_file: Optional[str] = None,
+    langlinks: Optional[Sequence[str]] = None,
+    html_encoding="utf-8",
+    remove_embedded_bg="",
+    ensure_ext_image_urls=True,
+):
 
-    couch, _ = mkcouch(args.couch_url)
-
-    startkey = args.startkey
-    endkey = args.endkey
-    key = args.key
-    key_file = args.key_file
-    langlinks = args.langlinks
+    couch, _ = mkcouch(couch_url)
 
     basic_view_args = {"stale": "ok", "include_docs": True}
     view_args = dict(basic_view_args)
@@ -55,9 +62,9 @@ def articles(args, info: si.Info):
             server=info.server,
             articlepath=info.articlepath,
             site_articlepath=info.articlepath,
-            encoding=args.html_encoding,
-            remove_embedded_bg=args.remove_embedded_bg,
-            ensure_ext_image_urls=args.ensure_ext_image_urls,
+            encoding=html_encoding,
+            remove_embedded_bg=remove_embedded_bg,
+            ensure_ext_image_urls=ensure_ext_image_urls,
         )
 
     def articles_from_viewiter(viewiter):

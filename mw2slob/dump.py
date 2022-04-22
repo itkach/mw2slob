@@ -5,6 +5,8 @@ import tarfile
 from io import TextIOWrapper
 from typing import IO
 from typing import Iterable
+from typing import Optional
+from typing import Sequence
 from typing import Tuple
 from typing import Union
 
@@ -57,15 +59,23 @@ def parse_loc_spec(s: str) -> Tuple[int, int]:
     return 1, int(s)
 
 
-def articles(args, info: si.Info) -> Iterable[convert.ConvertParams]:
+def articles(
+    dump_files: Sequence[str],
+    info: si.Info,
+    start_line_spec: str = "1:1",
+    end_line_spec: Optional[str] = None,
+    html_encoding="utf-8",
+    remove_embedded_bg="",
+    ensure_ext_image_urls=True,
+) -> Iterable[convert.ConvertParams]:
 
-    start_file, start_line = parse_loc_spec(args.start_line)
-    if args.end_line:
-        end_file, end_line = parse_loc_spec(args.end_line)
+    start_file, start_line = parse_loc_spec(start_line_spec)
+    if end_line_spec:
+        end_file, end_line = parse_loc_spec(end_line_spec)
     else:
         end_file, end_line = None, None
 
-    for dump_file in args.dump_file:
+    for dump_file in dump_files:
         dump_file = os.path.expanduser(dump_file)
         print(f"Reading articles from ${dump_file}")
         files: Iterable[Union[TextIOWrapper, IO[bytes]]] = []
@@ -118,9 +128,9 @@ def articles(args, info: si.Info) -> Iterable[convert.ConvertParams]:
                             server=info.server,
                             articlepath="./",  # TODO needs to be arg?
                             site_articlepath=info.articlepath,
-                            encoding=args.html_encoding,
-                            remove_embedded_bg=args.remove_embedded_bg,
-                            ensure_ext_image_urls=args.ensure_ext_image_urls,
+                            encoding=html_encoding,
+                            remove_embedded_bg=remove_embedded_bg,
+                            ensure_ext_image_urls=ensure_ext_image_urls,
                         )
                     except:
                         log.exception(f"Failed to read line {i}")
