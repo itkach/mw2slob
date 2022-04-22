@@ -4,6 +4,7 @@ from dataclasses import dataclass
 from dataclasses import field
 from typing import Iterable
 from typing import Mapping
+from typing import Set
 from urllib.parse import urlencode
 
 
@@ -49,16 +50,26 @@ class Info:
 
 def info(siteinfo: Mapping, local_namespaces: Iterable[str] = ()) -> Info:
     local_namespaces = set(local_namespaces or ())
+    valid_local_namespaces: Set[int] = set()
+    for ns in siteinfo.get("namespaces", {}).values():
+        ns_name = ns.get("*")
+        ns_canonical_name = ns.get("canonical")
+        ns_id = ns.get("id")
+        ns_id_str = str(ns_id)
+        for item in (ns_name, ns_canonical_name, ns_id_str):
+            if item in local_namespaces:
+                local_namespaces.remove(item)
+                valid_local_namespaces.add(ns_id)
+                break
+    if local_namespaces:
+        raise Exception(f"Invalid namespaces: {local_namespaces}")
+
     namespaces = {
         ns.get("id"): ns
         for ns in siteinfo.get("namespaces", {}).values()
-        if ns.get("id")
-        and not (
-            ns.get("*") in local_namespaces
-            or ns.get("canonical") in local_namespaces
-            or str(ns.get("id")) in local_namespaces
-        )
+        if ns.get("id") not in valid_local_namespaces
     }
+
     general_siteinfo = siteinfo["general"]
     sitename = general_siteinfo["sitename"]
     sitelang = general_siteinfo["lang"]
