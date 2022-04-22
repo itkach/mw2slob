@@ -58,7 +58,7 @@
       mw2slob dump --siteinfo enwikt.si.json ./enwiktionary-NS0-20220120-ENTERPRISE-HTML.json.tar.gz -f wikt common
     #+END_SRC
 
-    Note `-f wikt common` argument that specifies content filters to
+    Note ~-f wikt common~ argument that specifies content filters to
     use when compiling this dictionary. Content filter is a text file
     containing list of CSS selectors (one per line). HTML elements matching
     these selectors will be removed during compilation. `mw2slob`
@@ -66,11 +66,11 @@
     for most wikipedias and wiktionaries.
 
     Wikimedia Enterprise HTML Dumps are available only for some
-    [[https://www.mediawiki.org/wiki/Manual:Namespace][namespaces]]. For most wikipedias the main namespace `0` - articles - is
+    [[https://www.mediawiki.org/wiki/Manual:Namespace][namespaces]]. For most wikipedias the main namespace ~0~ - articles - is
     typically the only one of interest to most users. Wiktionaries, on the
     other hand, often make use of other such namespaces. For example,
     in English Wiktionary many articles include links to articles from
-    `Wiktionary` or `Appendix` namespaces, so it makes sense to
+    ~Wiktionary~ or ~Appendix~ namespaces, so it makes sense to
     include their content into compiled dictionary and make these
     links internal dictionary links rather than link to Wiktionary web
     site.
@@ -78,11 +78,11 @@
     These namespaces are not available as html dumps, but can be
     obtained via Mediawiki API via ~mwscrape~. Let's say we want to
     compile English Wiktionary and include the following namespaces in
-    addition to the main articles: `Appendix`, `Wiktionary`, `Rhymes`,
-    `Reconstruction` and `Thesaurus` (sampling random articles
+    addition to the main articles: ~Appendix~, ~Wiktionary~, ~Rhymes~,
+    ~Reconstruction~ and ~Thesaurus~ (sampling random articles
     indicates that these namespaces are often referenced).
 
-    First, we examine siteinfo (saved in `enwikt.si.json`) and find
+    First, we examine siteinfo (saved in ~enwikt.si.json~) and find
     that ids for these namespaces are:
 
     | Wiktionary     |   4 |
