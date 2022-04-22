@@ -1,14 +1,12 @@
 * mw2slob
-  This is a tool to convert MediaWiki content to
-  [[https://github.com/itkach/slob][slob]] dictionaries from
-  [[https://dumps.wikimedia.org/other/enterprise_html/][Wikimedia
-  Enterprise HTML Dumps]] or from CouchDB instances created by
-  [[https://github.com/itkach/mwscrape][mwscrape]].
+  This is a tool to convert MediaWiki content to [[https://github.com/itkach/slob][slob]] dictionaries
+  from [[https://dumps.wikimedia.org/other/enterprise_html/][Wikimedia Enterprise HTML Dumps]] or from CouchDB instances
+  created by [[https://github.com/itkach/mwscrape][mwscrape]].
 
-  Note that HTML dumps are different from HTML retrieved via
-  MediaWiki API (mwscrape), e.g. pages do not include table of
-  contents. Also, article title aliases from language links are only
-  available via ~mwscrape~.
+  Using HTML dumps is recommended for most users. ~mwscrape~ downloads
+  rendered articles via MediaWiki API and can be used to obtain
+  articles HTML for namespaces that are not available as enterprise
+  HTML dumps.
 
 ** Installation
 
@@ -59,6 +57,73 @@
       # compile dictionary
       mw2slob dump --siteinfo enwikt.si.json ./enwiktionary-NS0-20220120-ENTERPRISE-HTML.json.tar.gz -f wikt common
     #+END_SRC
+
+    Note `-f wikt common` argument that specifies content filters to
+    use when compiling this dictionary. Content filter is a text file
+    containing list of CSS selectors (one per line). HTML elements matching
+    these selectors will be removed during compilation. `mw2slob`
+    includes several filters (see [[./mw2slob/filters]]) that work well
+    for most wikipedias and wiktionaries.
+
+    Wikimedia Enterprise HTML Dumps are available only for some
+    [[https://www.mediawiki.org/wiki/Manual:Namespace][namespaces]]. For most wikipedias the main namespace `0` - articles - is
+    typically the only one of interest to most users. Wiktionaries, on the
+    other hand, often make use of other such namespaces. For example,
+    in English Wiktionary many articles include links to articles from
+    `Wiktionary` or `Appendix` namespaces, so it makes sense to
+    include their content into compiled dictionary and make these
+    links internal dictionary links rather than link to Wiktionary web
+    site.
+
+    These namespaces are not available as html dumps, but can be
+    obtained via Mediawiki API via ~mwscrape~. Let's say we want to
+    compile English Wiktionary and include the following namespaces in
+    addition to the main articles: `Appendix`, `Wiktionary`, `Rhymes`,
+    `Reconstruction` and `Thesaurus` (sampling random articles
+    indicates that these namespaces are often referenced).
+
+    First, we examine siteinfo (saved in `enwikt.si.json`) and find
+    that ids for these namespaces are:
+
+    | Wiktionary     |   4 |
+    | Appendix       | 100 |
+    | Rhymes         | 106 |
+    | Thesaurus      | 110 |
+    | Reconstruction | 118 |
+
+    Then we download rendered articles for these namespaces with ~mwscrape~:
+
+    #+BEGIN_SRC sh
+      mwscrape https://en.wiktionary.org --db enwikt-wiktionary --namespace 4
+      mwscrape https://en.wiktionary.org --db enwikt-appendix --namespace 100
+      mwscrape https://en.wiktionary.org --db enwikt-rhymes --namespace 106
+      mwscrape https://en.wiktionary.org --db enwikt-thesaurus --namespace 110
+      mwscrape https://en.wiktionary.org --db enwikt-reconstruction --namespace 118
+    #+END_SRC
+
+    Each takes some time, but these are relativly small and don't take
+    too long.
+
+    Finally, compile the dictionary:
+
+    #+BEGIN_SRC sh
+      mw2slob dump --siteinfo enwikt.si.json \
+              ./enwiktionary-NS0-20220420-ENTERPRISE-HTML.json.tar.gz \
+              http://localhost:5984/enwikt-wiktionary \
+              http://localhost:5984/enwikt-appendix \
+              http://localhost:5984/enwikt-rhymes \
+              http://localhost:5984/enwikt-thesaurus \
+              http://localhost:5984/enwikt-reconstruction \
+              -f wikt common --local-namespace 4 100 106 110 118
+    #+END_SRC
+
+    Note that `mw2slob dump` takes CouchDB URLs of the databases we
+    created with ~mwscrape~ in addition to the dump file name.
+
+    Also note the `--local-namespace` parameter. This tells the
+    compiler to make the links for these namespaces internal
+    dictionary links, just like cross-article links, otherwise they
+    would be converted to web links.
 
     See ~mw2slob dump --help~ for complete list of options.
 
