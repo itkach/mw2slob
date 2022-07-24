@@ -13,7 +13,7 @@
    ~mw2slob~ requires Python 3.7 (or Python 3.6 + ~dataclasses~) or
    newer and depends on the following components:
 
-   - [[http://github.org/itkach/slob/][Slob]]
+   - [[https://github.com/itkach/slob/][Slob]]
    - [[https://github.com/djc/couchdb-python/][couchdb-python]]
    - [[http://lxml.de][lxml]]
    - [[https://pythonhosted.org/cssselect/][cssselect]]
