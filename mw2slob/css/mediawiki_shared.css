@@ -480,3 +480,94 @@ li.gallerybox div.thumb span {
   width: 156px;
   top: -0.5em;
 }
+
+
+/* don't float infoboxes on narrow screen (prevents cut-off on the left)*/
+@media only screen and (max-width: 480px) {
+    table {
+        margin: 1em 0;
+        overflow-y: hidden;
+        overflow-x: auto !important;
+    }
+
+    table, caption, tbody, tfoot, thead, tr, th, td {
+        font-size: 100%;
+    }
+
+    .infobox table {
+	display: block;
+    }
+
+    .infobox {
+        max-width: none;
+        width: 100% !important;
+        float: none;
+        display: flex;
+        flex-flow: column nowrap;
+        width: 100% !important;
+        max-width: 100% !important;
+	flex: 1 1 100%;
+
+    }
+
+    table, .infobox {
+        float: none !important;
+        margin-left: 0 !important;
+        margin-right: 0 !important;
+	box-sizing: border-box;
+	border-collapse: collapse;
+    }
+
+    .infobox table figure {
+	margin-left: auto;
+        margin-right: auto;
+        width: 100%;
+        text-align: center;
+    }
+
+    .infobox > tbody > tr {
+        min-width: 100%;
+        display: flex;
+        flex-flow: row nowrap;
+    }
+
+    .infobox > tbody, .infobox > caption {
+        display: flex;
+        flex-flow: column nowrap;
+    }
+
+    .infobox tbody > tr > td, .infobox tbody > tr > th {
+        flex: 1 0;
+    }
+
+    .infobox td:only-child, .infobox th:only-child {
+        width: 100%;
+    }
+
+    .mw-content-ltr .infobox {
+        text-align: left;
+    }
+
+
+    .infobox .infobox-above,
+    .infobox caption {
+	display: none;
+    }
+
+    div.float-right, table.float-right, ul.float-right, .float-right {
+        clear: right;
+        float: right;
+        margin: 1em 0 1em 1em;
+    }
+
+    .infobox th, .infobox td {
+        vertical-align: top;
+        border: 0;
+        border-bottom-color: currentcolor;
+        border-bottom-style: none;
+        border-bottom-width: 0px;
+        border-bottom: 1px solid #eaecf0;
+        padding: 7px 10px;
+    }
+
+}
