@@ -18,7 +18,7 @@ def find_package_data():
 
 setup(
     name=PACKAGE_NAME,
-    version="1.0",
+    version="1.1",
     description=(
         "Create slob dictionary files from mwscrape CouchDB "
         "or Wikimedia Enterprise HTML Dumps"
