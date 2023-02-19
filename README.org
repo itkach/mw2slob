@@ -97,7 +97,7 @@
       mwscrape https://en.wiktionary.org --db enwikt-reconstruction --namespace 118
     #+END_SRC
 
-    Each takes some time, but these are relativly small and don't take
+    Each takes some time, but these are relatively small and don't take
     too long.
 
     Finally, compile the dictionary:
