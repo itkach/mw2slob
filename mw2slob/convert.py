@@ -122,11 +122,15 @@ def replace_article_path(articlepath, site_articlepath, relative_url):
     """
     >>> replace_article_path("./", "/wiki/", "./File:xyz.jpg")
     '/wiki/File:xyz.jpg'
+    >>> replace_article_path("/wiki/", "/wiki/", "/images//8/87/Tango-edit-clear.png")
+    '/images//8/87/Tango-edit-clear.png'
     >>> replace_article_path("/wiki/", "/wiki/", "/wiki/File:xyz.jpg")
     '/wiki/File:xyz.jpg'
     """
-    stripped_articlepath = relative_url[len(articlepath) :]
-    return f"{site_articlepath}{stripped_articlepath}"
+    if relative_url.startswith(articlepath):
+        stripped_articlepath = relative_url[len(articlepath) :]
+        return f"{site_articlepath}{stripped_articlepath}"
+    return relative_url
 
 
 def mk_ext_url(server, articlepath, site_articlepath, relative_url):
