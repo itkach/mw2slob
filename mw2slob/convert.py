@@ -376,7 +376,7 @@ def mk_article_header(summary_child, details):
 
 
 MATH_JAX_SCRIPTS = (
-    '<script src="~/js/jquery-2.1.3.min.js"></script>'
+    '<script src="~/js/jquery-2.2.4.min.js"></script>'
     '<script src="~/MathJax/MathJax.js"></script>'
     '<script src="~/MathJax/MediaWiki.js"></script>'
 )
