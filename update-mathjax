@@ -1,7 +1,7 @@
 #! /usr/bin/env sh
 MJX_HOME=${MJX_HOME:-~/MathJax}
 MJX_DEV_HOME=${MJX_DEV_HOME:-~/MathJax-dev}
-DEST=$PWD/mwscrape2slob/MathJax
+DEST=$PWD/mw2slob/MathJax
 TYPE=${OUTPUT_TYPE:-"SVG"}
 
 echo "MathJax home: $MJX_HOME"
