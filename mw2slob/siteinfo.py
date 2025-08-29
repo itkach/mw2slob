@@ -17,7 +17,10 @@ def get(mw_site, api_path="/w/api.php"):
     }
     query_string = urlencode(params)
     url = f"{mw_site}/{api_path}?{query_string}"
-    with urllib.request.urlopen(url) as response:
+
+    headers = {"User-Agent": "mw2slob"}
+    req = urllib.request.Request(url, headers=headers)
+    with urllib.request.urlopen(req) as response:
         data = json.load(response)
         return data["query"]
 
