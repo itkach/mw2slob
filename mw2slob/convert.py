@@ -1,5 +1,6 @@
 import collections
 import functools
+import json
 import logging
 import math
 import re
@@ -45,11 +46,17 @@ ConvertParams = collections.namedtuple(
 
 NEWLINE_RE = re.compile(r"[\n]{2,}")
 
+# Modern MediaWiki (1.41+) math output uses <span class="mwe-math-element">
+# with TeX source in data-mw.body.extsrc attribute
+# Legacy (old MediaWiki) math used <img class="tex"> and related elements
+SEL_MW_MATH_ELEMENT = CSSSelector("span.mwe-math-element")
 SEL_IMG_TEX = CSSSelector("img.tex,img.mwe-math-fallback-image-inline")
 SEL_A_NEW = CSSSelector("a.new")
 SEL_A_HREF_CITE = CSSSelector('a[href^="#cite"]')
 SEL_A_IPA = CSSSelector("span.IPA>a")
+# Match both modern (mwe-math-element) and legacy math elements
 SEL_MATH = CSSSelector(
+    "span.mwe-math-element, "
     "img.tex, .mwe-math-fallback-png-display, "
     ".mwe-math-fallback-image-inline, "
     ".mwe-math-fallback-png-inline, "
@@ -379,11 +386,9 @@ def mk_article_header(summary_child, details):
     )
 
 
-MATH_JAX_SCRIPTS = (
-    '<script src="~/js/jquery-3.7.1.slim.min.js"></script>'
-    '<script src="~/MathJax/MathJax.js"></script>'
-    '<script src="~/MathJax/MediaWiki.js"></script>'
-)
+MATH_JAX_SCRIPTS = """<script type="importmap">
+{"imports":{"mathjax/":"./~/MathJax/"}}</script>
+<script type="module" src="./~/MathJax/MediaWiki.js"></script>"""
 
 CSS_LINKS = (
     '<link rel="stylesheet" href="~/css/shared.css" type="text/css">'
@@ -499,6 +504,16 @@ def convert(
             if srcset:
                 item.attrib["srcset"] = x_srcset(srcset)
 
+    for item in SEL_MW_MATH_ELEMENT(doc):
+        data_mw = item.attrib.get("data-mw")
+        if data_mw:
+            try:
+                extsrc = json.loads(data_mw).get("body", {}).get("extsrc")
+            except json.JSONDecodeError:
+                extsrc = None
+            if extsrc:
+                item.set("data-tex", extsrc)
+
     for item in SEL_WITH_DATA_MW_ATTR(doc):
         item.attrib.pop("data-mw")
     for item in SEL_WITH_DATA_MW_SECTION_ID(doc):
@@ -518,6 +533,9 @@ def convert(
     has_math = len(SEL_MATH(doc)) > 0
 
     if has_math:
+        # Remove fallback images pointing at the Wikimedia REST API
+        # (unreachable offline); MediaWiki.js renders math client-side
+        # from the data-tex attribute set above instead.
         for item in SEL_IMG_TEX(doc):
             item.attrib.pop("srcset", None)
             item.attrib.pop("src", None)

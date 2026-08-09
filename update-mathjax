@@ -1,64 +1,98 @@
-#! /usr/bin/env sh
-MJX_HOME=${MJX_HOME:-~/MathJax}
-MJX_DEV_HOME=${MJX_DEV_HOME:-~/MathJax-dev}
-DEST=$PWD/mw2slob/MathJax
-TYPE=${OUTPUT_TYPE:-"SVG"}
+#!/usr/bin/env sh
+# update-mathjax - Build MathJax 4 for mw2slob
+#
+# This script installs MathJax 4 and copies the necessary files
+# to mw2slob/MathJax/ for browser use.
+#
+# Usage: ./update-mathjax [destination]
+#   destination: path to mw2slob directory (default: ./mw2slob)
 
-echo "MathJax home: $MJX_HOME"
-echo "MathJax-dev home: $MJX_DEV_HOME"
+set -e
+
+DEST="${1:-./mw2slob}/MathJax"
+MJX_PKG="@mathjax/src"
+PROJECT_DIR="$(cd "$(dirname "$0")" && pwd)"
+
+echo "MathJax 4 update for mw2slob"
 echo "Destination: $DEST"
-echo "Output type: $TYPE"
+echo "Project directory: $PROJECT_DIR"
 
-cd $PWD/mathjax/
-cp MediaWiki_${TYPE}.lis $MJX_DEV_HOME/combiner/lists/
-cp config/MediaWiki_${TYPE}_settings.js $MJX_HOME/config/
-cp extensions/texvc.js  $MJX_HOME/extensions/TeX/
-cp extensions/wiki2jax.js $MJX_HOME/extensions/
+# Create destination directory
+mkdir -p "$DEST"
 
-rm $MJX_HOME/config/MediaWiki_${TYPE}.js
-$MJX_DEV_HOME/combiner/combineMJ $MJX_HOME
-
-mkdir -p $DEST/jax/output
-mkdir -p $DEST/extensions/TeX
-cd $MJX_HOME
-
-SYNC="rsync -aP"
-$SYNC MathJax.js $DEST
-cp config/MediaWiki_${TYPE}.js $DEST/MediaWiki.js
-sed -i "s/\[MathJax\]\/config\/MediaWiki_${TYPE}\.js/\[MathJax\]\/MediaWiki\.js/g" $DEST/MediaWiki.js
-
-#enabling CommonHTML preview incurs
-#prohibiting penalty on mobile, at least in MathJax 2.5
-#$SYNC jax/output/CommonHTML $DEST/jax/output/
-
-$SYNC jax/output/${TYPE} \
---exclude imageFonts.js \
---exclude config.js \
---exclude jax.js \
---exclude mtable.js \
---exclude Asana-Math \
---exclude Gyre-Termes \
---exclude Neo-Euler \
---exclude Gyre-Pagella \
---exclude Latin-Modern \
---exclude TeX \
-$DEST/jax/output/
-
-$SYNC extensions/TeX \
---exclude noErrors.js \
---exclude noUndefined.js \
---exclude AMSmath.js \
---exclude AMSsymbols.js \
---exclude mathchoice.js \
---exclude texvc.js \
---exclude color.js \
---exclude cancel.js \
---exclude mediawiki-texvc.js \
-$DEST/extensions/
-
-if [ -d fonts/${TYPE}/STIX-Web/woff ]; then
-    mkdir -p $DEST/fonts/${TYPE}/STIX-Web/
-    $SYNC fonts/${TYPE}/STIX-Web/woff $DEST/fonts/${TYPE}/STIX-Web/
+# Create package.json if it doesn't exist
+if [ ! -f "$PROJECT_DIR/package.json" ]; then
+  echo "Creating package.json..."
+  cat > "$PROJECT_DIR/package.json" << 'EOF'
+{
+  "name": "mw2slob",
+  "version": "1.0.0",
+  "description": "Create slob dictionary files from MediaWiki dumps",
+  "private": true
+}
+EOF
 fi
 
-du -hs $DEST
+# Install MathJax 4 source package
+echo "Installing $MJX_PKG@4..."
+cd "$PROJECT_DIR"
+npm install "$MJX_PKG@4" 2>&1 | tail -3
+
+# Verify installation
+MJX_DIR="$PROJECT_DIR/node_modules/$MJX_PKG"
+if [ ! -d "$MJX_DIR" ]; then
+  echo "ERROR: $MJX_DIR does not exist" >&2
+  exit 1
+fi
+
+# Copy MathJax bundle files
+echo "Copying MathJax 4 files..."
+
+# Copy the tex-svg bundle (TeX input + SVG output)
+if [ ! -f "$MJX_DIR/bundle/tex-svg.js" ]; then
+  echo "ERROR: $MJX_DIR/bundle/tex-svg.js not found" >&2
+  exit 1
+fi
+cp "$MJX_DIR/bundle/tex-svg.js" "$DEST/"
+echo "  Copied tex-svg.js"
+
+# Copy the handful of TeX extensions that aren't compiled into
+# tex-svg.js itself so the "autoload" package can fetch them on demand
+# from a same-origin/relative path, offline.
+mkdir -p "$DEST/input/tex/extensions"
+for ext in boldsymbol mhchem color cancel unicode; do
+  if [ ! -f "$MJX_DIR/bundle/input/tex/extensions/$ext.js" ]; then
+    echo "ERROR: $MJX_DIR/bundle/input/tex/extensions/$ext.js not found" >&2
+    exit 1
+  fi
+  cp "$MJX_DIR/bundle/input/tex/extensions/$ext.js" "$DEST/input/tex/extensions/"
+  echo "  Copied input/tex/extensions/$ext.js"
+done
+
+# Copy texvc and wiki2jax extensions from mathjax/ directory
+if [ ! -f "$PROJECT_DIR/mathjax/extensions/texvc.js" ]; then
+  echo "ERROR: $PROJECT_DIR/mathjax/extensions/texvc.js not found" >&2
+  exit 1
+fi
+cp "$PROJECT_DIR/mathjax/extensions/texvc.js" "$DEST/"
+echo "  Copied texvc.js"
+
+if [ ! -f "$PROJECT_DIR/mathjax/extensions/wiki2jax.js" ]; then
+  echo "ERROR: $PROJECT_DIR/mathjax/extensions/wiki2jax.js not found" >&2
+  exit 1
+fi
+cp "$PROJECT_DIR/mathjax/extensions/wiki2jax.js" "$DEST/"
+echo "  Copied wiki2jax.js"
+
+# Copy the MediaWiki config
+if [ ! -f "$PROJECT_DIR/mw2slob/MathJax/MediaWiki.js" ]; then
+  echo "ERROR: $PROJECT_DIR/mw2slob/MathJax/MediaWiki.js not found" >&2
+  exit 1
+fi
+cp "$PROJECT_DIR/mw2slob/MathJax/MediaWiki.js" "$DEST/"
+echo "  Copied MediaWiki.js"
+
+echo ""
+echo "MathJax 4 update complete!"
+echo "Files in $DEST:"
+ls -la "$DEST/"
