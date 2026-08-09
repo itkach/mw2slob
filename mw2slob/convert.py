@@ -156,6 +156,54 @@ def deg2num(lat_deg, lon_deg, zoom):
     return (xtile, ytile)
 
 
+# Wikimedia's image scalers now reject hotlinked thumbnail requests
+# for any width other than these standard sizes (a request for any
+# other width gets a 404 "Use thumbnail sizes listed on ..." error
+# page instead of an image) - see
+# https://www.mediawiki.org/wiki/Common_thumbnail_sizes
+# Enterprise HTML dumps still embed the pre-standardization widths
+# (e.g. 440px, matching a 220px display width at 2x pixel density),
+# so those need rounding up to the nearest standard width to load.
+STANDARD_THUMB_WIDTHS = (20, 40, 60, 120, 250, 330, 500, 960, 1280, 1920, 3840)
+
+THUMB_WIDTH_RE = re.compile(r"/(\d+)(px-[^/]+)$")
+
+
+def round_up_thumb_width(width):
+    """
+    >>> round_up_thumb_width(440)
+    500
+    >>> round_up_thumb_width(500)
+    500
+    >>> round_up_thumb_width(5000)
+    3840
+    """
+    for w in STANDARD_THUMB_WIDTHS:
+        if width <= w:
+            return w
+    return STANDARD_THUMB_WIDTHS[-1]
+
+
+def fix_thumb_width(path):
+    """
+    >>> fix_thumb_width('/wikipedia/commons/thumb/2/26/x.jpg/440px-x.jpg')
+    '/wikipedia/commons/thumb/2/26/x.jpg/500px-x.jpg'
+    >>> fix_thumb_width('/wikipedia/commons/thumb/2/26/x.jpg/500px-x.jpg')
+    '/wikipedia/commons/thumb/2/26/x.jpg/500px-x.jpg'
+    >>> fix_thumb_width('/wikipedia/commons/2/26/x.jpg')
+    '/wikipedia/commons/2/26/x.jpg'
+    """
+    m = THUMB_WIDTH_RE.search(path)
+    if not m:
+        return path
+    width = int(m.group(1))
+    new_width = round_up_thumb_width(width)
+    if new_width == width:
+        return path
+    start, end = m.span(1)
+    return path[:start] + str(new_width) + path[end:]
+
+
 def convert_url(
     url,
     server=None,
@@ -216,6 +264,8 @@ def convert_url(
     if parsed["netloc"]:
         if not parsed["scheme"]:
             parsed["scheme"] = "http"
+        if parsed["netloc"].endswith("upload.wikimedia.org"):
+            parsed["path"] = fix_thumb_width(parsed["path"])
         return urlunparse(tuple(parsed.values()))
 
     path = parsed["path"]
