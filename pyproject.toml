@@ -1,0 +1,38 @@
+[project]
+name = "mw2slob"
+version = "1.1"
+description = "Create slob dictionary files from mwscrape CouchDB or Wikimedia Enterprise HTML Dumps"
+readme = { file = "README.org", content-type = "text/plain" }
+license = { file = "LICENSE.txt" }
+authors = [{ name = "Igor Tkach", email = "itkach@gmail.com" }]
+requires-python = ">=3.9"
+# slob (https://github.com/itkach/slob) isn't published on PyPI - it's
+# always had to be installed manually from source. This direct URL
+# reference (PEP 508) is understood natively by both pip and uv, so
+# `pip install`, `uv sync`, and `uvx --from git+...` all resolve the
+# full dependency graph with no separate manual step.
+dependencies = [
+    "slob @ git+https://github.com/itkach/slob.git",
+    "lxml",
+    "CouchDB",
+    "cssselect",
+    "cssutils",
+    "bs4",
+    "lxml_html_clean",
+]
+
+[project.urls]
+Homepage = "http://github.com/itkach/mw2slob"
+
+[project.scripts]
+mw2slob = "mw2slob.cli:main"
+
+[build-system]
+requires = ["setuptools>=61"]
+build-backend = "setuptools.build_meta"
+
+[tool.setuptools.packages.find]
+include = ["mw2slob*"]
+
+[tool.setuptools.package-data]
+mw2slob = ["css/**/*", "js/**/*", "images/**/*", "filters/**/*", "MathJax/**/*"]

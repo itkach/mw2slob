@@ -3,3 +3,7 @@
 *.egg-info
 __pycache__
 README.html
+.venv
+build
+dist
+node_modules

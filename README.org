@@ -10,38 +10,74 @@
 
 ** Installation
 
-   ~mw2slob~ requires Python 3.7 (or Python 3.6 + ~dataclasses~) or
-   newer and depends on the following components:
+   ~mw2slob~ requires Python 3.9 or newer and depends on the
+   following components:
 
-   - [[https://github.com/itkach/slob/][Slob]]
+   - [[https://github.com/itkach/slob/][Slob]] (not published on PyPI - installed straight from GitHub, see below)
    - [[https://github.com/djc/couchdb-python/][couchdb-python]]
    - [[http://lxml.de][lxml]]
    - [[https://pythonhosted.org/cssselect/][cssselect]]
    - [[http://pythonhosted.org/cssutils/][cssutils]]
    - [[https://www.crummy.com/software/BeautifulSoup/][BeautifulSoup]]
+   - [[https://gitlab.pyicu.org/main/pyicu][PyICU]] (via Slob), which needs the ICU library itself
 
-   Install ~lxml~ (consult your operating system documentation for
-   installation instructions). For example, on Ubuntu:
+   Two native dependencies need a system library present before
+   Python packaging can build them: ~lxml~ needs ~libxml2~/~libxslt~,
+   and PyICU (a dependency of Slob) needs ICU. Install those first.
 
+   On Ubuntu/Debian:
    #+BEGIN_SRC sh
-   sudo apt-get install python3-lxml
+   sudo apt-get install libxml2-dev libxslt1-dev libicu-dev pkg-config
    #+END_SRC
 
-   Create Python virtual environment and install slob.py as
-   described at https://github.com/itkach/slob/.
-
-   In this virtual environment run
-
+   On macOS (Homebrew):
    #+BEGIN_SRC sh
-   pip install git+https://github.com/itkach/mw2slob.git
+   brew install icu4c pkg-config
+   #+END_SRC
+   Homebrew's ~icu4c~ is keg-only (not linked onto ~PATH~), so
+   ~pkg-config~ won't find it unless you point it there explicitly -
+   set this in your shell profile, or export it just before running
+   ~uv~/~pip~ commands below:
+   #+BEGIN_SRC sh
+   export PKG_CONFIG_PATH="$(brew --prefix icu4c)/lib/pkgconfig"
    #+END_SRC
 
-   To work on Python 3.6 ~mw2slob~  requires installation of additional
-   dependency ~dataclasses~:
-   #+BEGIN_SRC sh
-   pip install dataclasses
-   #+END_SRC
+*** With [[https://docs.astral.sh/uv/][uv]] (recommended)
 
+    [[https://docs.astral.sh/uv/][uv]] resolves and builds the whole dependency graph in one step,
+    including ~slob~ pulled directly from its GitHub repo (it isn't
+    on PyPI, so this used to be a manual step) - no separate "install
+    slob first" dance.
+
+    To work on ~mw2slob~ itself, clone it and let ~uv~ create a
+    dedicated virtual environment:
+    #+BEGIN_SRC sh
+    git clone https://github.com/itkach/mw2slob.git
+    cd mw2slob
+    uv sync
+    uv run mw2slob --help
+    #+END_SRC
+    (~uv sync~ creates ~.venv~ in the project directory; ~uv run~
+    uses it automatically. Activate it directly with
+    ~source .venv/bin/activate~ if you'd rather not prefix every
+    command with ~uv run~.)
+
+    To just *run* ~mw2slob~ without cloning anything, ~uv~ can build
+    and run it straight from GitHub into a disposable, cached
+    environment:
+    #+BEGIN_SRC sh
+    uvx --from git+https://github.com/itkach/mw2slob mw2slob --help
+    #+END_SRC
+
+*** With plain ~pip~
+
+    Create a virtual environment, then install ~mw2slob~ and ~slob~
+    (from GitHub, since it isn't on PyPI) into it:
+    #+BEGIN_SRC sh
+    python3 -m venv .venv
+    source .venv/bin/activate
+    pip install git+https://github.com/itkach/mw2slob.git
+    #+END_SRC
 
 
 ** Usage
