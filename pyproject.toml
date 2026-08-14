@@ -1,6 +1,6 @@
 [project]
 name = "mw2slob"
-version = "1.1"
+dynamic = ["version"]
 description = "Create slob dictionary files from mwscrape CouchDB or Wikimedia Enterprise HTML Dumps"
 readme = { file = "README.org", content-type = "text/plain" }
 license = { file = "LICENSE.txt" }
@@ -28,7 +28,7 @@ Homepage = "http://github.com/itkach/mw2slob"
 mw2slob = "mw2slob.cli:main"
 
 [build-system]
-requires = ["setuptools>=61"]
+requires = ["setuptools>=61", "setuptools_scm>=8"]
 build-backend = "setuptools.build_meta"
 
 [tool.setuptools.packages.find]
@@ -36,3 +36,10 @@ include = ["mw2slob*"]
 
 [tool.setuptools.package-data]
 mw2slob = ["css/**/*", "js/**/*", "images/**/*", "filters/**/*", "MathJax/**/*"]
+
+# Version comes from `git describe` (e.g. tag 1.1, 15 commits past it ->
+# 1.1.post15+g<hash>) instead of being hand-maintained here - see
+# https://setuptools-scm.readthedocs.io/. Git installs (uvx --from
+# git+..., pip install git+...) fetch enough history for this to work
+# without extra configuration.
+[tool.setuptools_scm]

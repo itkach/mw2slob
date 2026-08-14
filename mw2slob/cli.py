@@ -1,4 +1,5 @@
 import argparse
+import importlib.metadata
 import itertools
 import json
 import logging
@@ -134,6 +135,11 @@ def default_filter_dir():
 
 def arg_parser():
     arg_parser = argparse.ArgumentParser()
+    arg_parser.add_argument(
+        "--version",
+        action="version",
+        version=f"%(prog)s {importlib.metadata.version('mw2slob')}",
+    )
 
     subparsers = arg_parser.add_subparsers()
 
