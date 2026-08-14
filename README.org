@@ -64,9 +64,23 @@
 
     To just *run* ~mw2slob~ without cloning anything, ~uv~ can build
     and run it straight from GitHub into a disposable, cached
-    environment:
+    environment. This always picks up the latest commit on the
+    default branch:
     #+BEGIN_SRC sh
     uvx --from git+https://github.com/itkach/mw2slob mw2slob --help
+    #+END_SRC
+
+    To run a specific released version instead, name its tag in the
+    URL:
+    #+BEGIN_SRC sh
+    uvx --from git+https://github.com/itkach/mw2slob@1.2 mw2slob --help
+    #+END_SRC
+
+    If ~mw2slob --version~ ever looks out of date right after a new
+    tag is published - ~uv~'s cache doesn't always notice a tag added
+    to a commit it already has - clear it once and try again:
+    #+BEGIN_SRC sh
+    uv cache clean
     #+END_SRC
 
 *** With plain ~pip~
