@@ -50,7 +50,8 @@ NEWLINE_RE = re.compile(r"[\n]{2,}")
 # with TeX source in data-mw.body.extsrc attribute
 # Legacy (old MediaWiki) math used <img class="tex"> and related elements
 SEL_MW_MATH_ELEMENT = CSSSelector("span.mwe-math-element")
-SEL_IMG_TEX = CSSSelector("img.tex,img.mwe-math-fallback-image-inline")
+SEL_IMG_TEX = CSSSelector('img.tex,img[class*="mwe-math-fallback"]')
+SEL_MATH_FALLBACK_IMG = CSSSelector('img[class*="mwe-math-fallback"]')
 SEL_A_NEW = CSSSelector("a.new")
 SEL_A_HREF_CITE = CSSSelector('a[href^="#cite"]')
 SEL_A_IPA = CSSSelector("span.IPA>a")
@@ -583,9 +584,30 @@ def convert(
     has_math = len(SEL_MATH(doc)) > 0
 
     if has_math:
-        # Remove fallback images pointing at the Wikimedia REST API
-        # (unreachable offline); MediaWiki.js renders math client-side
-        # from the data-tex attribute set above instead.
+        # Modern math: MediaWiki.js replaces the whole span.mwe-math-element
+        # (see MATH_SELECTOR in MathJax/wiki2jax.js) once it has data-tex,
+        # so the nested fallback <img> never needs to actually load
+        # anything. But keep the element itself (rather than dropping it):
+        # its width/height/vertical-align inline style, set by MediaWiki
+        # to match the formula's real rendered size, reserves the right
+        # amount of layout space before MathJax has run, avoiding a
+        # layout jump when the SVG is inserted. Strip src/srcset (the
+        # unreachable Wikimedia URL) and alt (so no raw TeX/MathML text
+        # shows as a placeholder, and so it stops matching wiki2jax.js's
+        # *legacy* image selector, which requires [alt] - leaving alt in
+        # place would otherwise make every formula render twice, once via
+        # the span and once via this same img).
+        for item in SEL_MW_MATH_ELEMENT(doc):
+            if item.attrib.get("data-tex"):
+                for img in SEL_MATH_FALLBACK_IMG(item):
+                    img.attrib.pop("srcset", None)
+                    img.attrib.pop("src", None)
+                    img.attrib.pop("alt", None)
+
+        # Legacy standalone <img class="tex"> (and any fallback image not
+        # nested in a data-tex span) *is* the node MathJax.js replaces
+        # directly - keep the element, just remove the unreachable
+        # Wikimedia REST API URL.
         for item in SEL_IMG_TEX(doc):
             item.attrib.pop("srcset", None)
             item.attrib.pop("src", None)

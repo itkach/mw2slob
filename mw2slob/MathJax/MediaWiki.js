@@ -46,7 +46,15 @@ class NoMenu {
 
 globalThis.MathJax = {
   loader: {
-    paths: { mathjax: MATHJAX_BASE },
+    // tex-svg.js only embeds the "static" glyph set for its default
+    // MathJax-Newcm font; less common blocks (Cyrillic, Fraktur,
+    // double-struck, braille, etc.) are compiled as separate "dynamic"
+    // font chunks and loaded on demand from `[fonts]/mathjax-newcm-font/
+    // svg/dynamic/*.js`. Left unconfigured, `paths.fonts` defaults to
+    // https://cdn.jsdelivr.net/npm/@mathjax - a live fetch that hangs
+    // offline/on slow networks with no fallback. Point it at the copies
+    // bundled alongside this file (see mw2slob/MathJax/fonts/) instead.
+    paths: { mathjax: MATHJAX_BASE, fonts: MATHJAX_BASE + 'fonts' },
     require: (url) => import(url),
   },
   tex: {
