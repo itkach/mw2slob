@@ -555,6 +555,15 @@ def convert(
             if srcset:
                 item.attrib["srcset"] = x_srcset(srcset)
 
+        if item.tag == "img":
+            # Article images are typically numerous and often large;
+            # deprioritizing them keeps them from competing for
+            # bandwidth against more important resources. loading="lazy"
+            # additionally defers offscreen images until they're
+            # actually needed.
+            item.attrib["loading"] = "lazy"
+            item.attrib["fetchpriority"] = "low"
+
     for item in SEL_MW_MATH_ELEMENT(doc):
         data_mw = item.attrib.get("data-mw")
         if data_mw:
