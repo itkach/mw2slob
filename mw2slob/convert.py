@@ -441,6 +441,14 @@ MATH_JAX_SCRIPTS = """<script type="importmap">
 {"imports":{"mathjax/":"./~/MathJax/"}}</script>
 <script type="module" src="./~/MathJax/MediaWiki.js"></script>"""
 
+# <html> and <head> are omitted on purpose: HTML5 makes both optional (a
+# browser infers them, collecting any leading tags like the <link>s below
+# into an implicit <head>), and skipping them saves a few dozen bytes per
+# article, multiplied by however many articles a dump has. The doctype is
+# unaffected by that omission - it only has to be the very first thing in
+# the document to put the browser in standards rather than quirks mode.
+DOCTYPE = "<!DOCTYPE html>"
+
 CSS_LINKS = (
     '<link rel="stylesheet" href="~/css/shared.css" type="text/css">'
     '<link rel="stylesheet" href="~/css/mediawiki_shared.css" type="text/css">'
@@ -664,7 +672,7 @@ def convert(
         content_root = doc
     serialized = str(lxml.html.tostring(content_root, encoding="unicode"))
     result = "".join(
-        (CSS_LINKS, math_jax, wrap_rtl(serialized) if rtl else serialized)
+        (DOCTYPE, CSS_LINKS, math_jax, wrap_rtl(serialized) if rtl else serialized)
     ).encode(encoding)
 
     return result
