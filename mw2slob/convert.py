@@ -652,7 +652,17 @@ def convert(
         item.drop_tree()
 
     math_jax = MATH_JAX_SCRIPTS if has_math else ""
-    serialized = str(lxml.html.tostring(doc, encoding="unicode"))
+    # Cleaner(page_structure=True) above rewrites the original <html> root
+    # into a <div> (its documented way of stripping page-structure markup),
+    # so serializing doc itself would emit that leftover, meaningless <div>
+    # wrapping the actual content. Serialize the real <body> element instead
+    # - it's already what the toc-insertion code above treats as the
+    # article's content root - so the output is just the body element (with
+    # its real lang/class/dir/data-mw-* attributes intact) and nothing else.
+    content_root = doc.find("body")
+    if content_root is None:
+        content_root = doc
+    serialized = str(lxml.html.tostring(content_root, encoding="unicode"))
     result = "".join(
         (CSS_LINKS, math_jax, wrap_rtl(serialized) if rtl else serialized)
     ).encode(encoding)
