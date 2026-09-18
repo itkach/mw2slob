@@ -10,7 +10,7 @@
 
 ** Installation
 
-   ~mw2slob~ requires Python 3.9 or newer and depends on the
+   ~mw2slob~ requires Python 3.10 or newer and depends on the
    following components:
 
    - [[https://github.com/itkach/slob/][Slob]] (not published on PyPI - installed straight from GitHub, see below)

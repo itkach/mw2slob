@@ -5,7 +5,7 @@ description = "Create slob dictionary files from mwscrape CouchDB or Wikimedia E
 readme = { file = "README.org", content-type = "text/plain" }
 license = { file = "LICENSE.txt" }
 authors = [{ name = "Igor Tkach", email = "itkach@gmail.com" }]
-requires-python = ">=3.9"
+requires-python = ">=3.10"
 # slob (https://github.com/itkach/slob) isn't published on PyPI - it's
 # always had to be installed manually from source. This direct URL
 # reference (PEP 508) is understood natively by both pip and uv, so
