@@ -101,17 +101,19 @@ ON CONFLICT (id) DO UPDATE SET rev = max(rev, excluded.rev), copies = copies + 1
 """
 
 
-def default_page_index_path(dump_files: Sequence[str]) -> str:
-    """
-    >>> default_page_index_path(["/d/simplewiki_namespace_0_chunk_0.tar.gz",
-    ...                          "/d/simplewiki_namespace_0_chunk_1.tar.gz"])
+def dump_sidecar_path(dump_files: Sequence[str], ext: str) -> str:
+    """Path for a file derived from a dump: next to its first file, named after
+    it without the _chunk_N suffix, with extension `ext`.
+
+    >>> dump_sidecar_path(["/d/simplewiki_namespace_0_chunk_0.tar.gz",
+    ...                    "/d/simplewiki_namespace_0_chunk_1.tar.gz"], "pages.sqlite")
     '/d/simplewiki_namespace_0.pages.sqlite'
-    >>> default_page_index_path(["/d/enwiki_namespace_0.tar.gz"])
-    '/d/enwiki_namespace_0.pages.sqlite'
+    >>> dump_sidecar_path(["/d/enwiki_namespace_0.tar.gz"], "records.sqlite")
+    '/d/enwiki_namespace_0.records.sqlite'
     """
     first = os.path.expanduser(dump_files[0])
     base = re.sub(r"_chunk_\d+$", "", replace_extensions(os.path.basename(first)))
-    return os.path.join(os.path.dirname(first), f"{base}.pages.sqlite")
+    return os.path.join(os.path.dirname(first), f"{base}.{ext}")
 
 
 def _dump_sources(dump_files: Sequence[str]) -> Set[Tuple[str, int]]:
@@ -220,6 +222,209 @@ class PageIndex:
 
     def close(self) -> None:
         self._cx.close()
+
+
+# A debugging aid, separate from the page index: every record of a dump, with
+# its page, revision, title, some revision metadata and location, for checking
+# how pages that occur more than once were handled. member and line are 1-based
+# and match the --start-line/--end-line MEMBER:LINE spec of that dump file.
+
+RECORDS_SCHEMA = """
+CREATE TABLE file (
+    id INTEGER PRIMARY KEY,
+    name TEXT NOT NULL UNIQUE
+);
+CREATE TABLE record (
+    page_id INTEGER NOT NULL,
+    revision INTEGER NOT NULL,
+    modified TEXT,      -- revision timestamp (date_modified)
+    size INTEGER,       -- wikitext size in bytes (version.size.value)
+    tags TEXT,          -- edit tags (version.tags), comma-separated
+    title TEXT NOT NULL,
+    file_id INTEGER NOT NULL REFERENCES file (id),
+    member INTEGER NOT NULL,
+    line INTEGER NOT NULL
+);
+"""
+
+RECORDS_INDEXES = """
+CREATE INDEX record_page_id ON record (page_id);
+CREATE INDEX record_title ON record (title);
+"""
+
+RECORDS_INSERT = """
+INSERT INTO record (page_id, revision, modified, size, tags, title, file_id, member, line)
+VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
+"""
+
+
+def _record_rows(file_id: int, dump_file: str) -> Iterator[tuple]:
+    for member, f in enumerate(dump_members(dump_file), 1):
+        for line_number, line in enumerate(f, 1):
+            try:
+                data = json.loads(line)
+                version = data["version"]
+                row = (
+                    data["identifier"],
+                    version["identifier"],
+                    data.get("date_modified"),
+                    (version.get("size") or {}).get("value"),
+                    ",".join(version.get("tags") or ()),
+                    data["name"],
+                    file_id,
+                    member,
+                    line_number,
+                )
+            except Exception:
+                log.warning(f"{dump_file} {member}:{line_number}: unreadable record")
+                continue
+            yield row
+
+
+def build_records(dump_files: Sequence[str], path: str) -> None:
+    """Write every record of `dump_files` to a new SQLite file at `path`,
+    replacing any previous one. Reads the dump in a single process, streaming
+    records into the database, so memory use doesn't grow with the dump."""
+    tmp = f"{path}.tmp"
+    if os.path.exists(tmp):
+        os.remove(tmp)
+    with contextlib.closing(sqlite3.connect(tmp)) as cx:
+        cx.executescript(RECORDS_SCHEMA)
+        for file_id, dump_file in enumerate(dump_files, 1):
+            cx.execute(
+                "INSERT INTO file (id, name) VALUES (?, ?)",
+                (file_id, os.path.basename(dump_file)),
+            )
+            before = cx.total_changes
+            cx.executemany(RECORDS_INSERT, _record_rows(file_id, dump_file))
+            print(f"  {dump_file}: {cx.total_changes - before} records")
+        cx.commit()
+        print("Indexing")
+        cx.executescript(RECORDS_INDEXES)
+    os.replace(tmp, path)
+    print(f"Wrote {path}")
+
+
+DUPLICATES_COLUMNS = (
+    "page id",
+    "revisions",
+    "revision id",
+    "modified",
+    "size",
+    "newest?",
+    "file",
+    "line",
+    "title",
+    "tags",
+)
+
+# Every record of each page that has more than one, grouped by page, oldest
+# revision first. newest? is "yes" for the record conversion keeps (the newest
+# revision, first occurrence in dump file order), "repeat" for a later record
+# of that same revision, which conversion skips, and empty otherwise.
+DUPLICATES_QUERY = """
+SELECT
+    page_id,
+    n.revisions,
+    revision,
+    modified,
+    size,
+    CASE
+        WHEN row_number() OVER (PARTITION BY page_id
+                                ORDER BY revision DESC, file_id, member, line) = 1
+            THEN 'yes'
+        WHEN revision = max(revision) OVER (PARTITION BY page_id) THEN 'repeat'
+    END,
+    f.name,
+    line,
+    title,
+    tags
+FROM record
+JOIN file f ON f.id = record.file_id
+JOIN (SELECT page_id, count(DISTINCT revision) AS revisions FROM record
+      GROUP BY page_id HAVING count(*) > 1) n USING (page_id)
+ORDER BY page_id, revision, file_id, member, line
+"""
+
+
+def duplicate_records(path: str) -> Iterator[tuple]:
+    """Rows of the duplicates report (columns as in DUPLICATES_COLUMNS) from a
+    records database written by build_records."""
+    with contextlib.closing(sqlite3.connect(path)) as cx:
+        yield from cx.execute(DUPLICATES_QUERY)
+
+
+# Each page's newest revision, for telling older revisions apart.
+_NEWEST = "(SELECT page_id, max(revision) AS newest FROM record GROUP BY page_id)"
+
+
+def records_stats(path: str) -> dict:
+    """Summary counts from a records database written by build_records."""
+
+    with contextlib.closing(sqlite3.connect(path)) as cx:
+
+        def value(sql):
+            return cx.execute(sql).fetchone()[0]
+
+        def rows(sql):
+            return cx.execute(sql).fetchall()
+
+        records = value("SELECT count(*) FROM record")
+        pages = value("SELECT count(DISTINCT page_id) FROM record")
+        older = value(
+            f"SELECT count(*) FROM record JOIN {_NEWEST} USING (page_id) "
+            "WHERE revision < newest"
+        )
+        return {
+            "files": value("SELECT count(*) FROM file"),
+            "records": records,
+            "pages": pages,
+            "pages_with_duplicates": value(
+                "SELECT count(*) FROM (SELECT page_id FROM record "
+                "GROUP BY page_id HAVING count(*) > 1)"
+            ),
+            "extra_records": records - pages,
+            "older_revisions": older,
+            "repeats_of_newest": records - pages - older,
+            "renamed_pages": value(
+                "SELECT count(*) FROM (SELECT page_id FROM record "
+                "GROUP BY page_id HAVING count(DISTINCT title) > 1)"
+            ),
+            "shared_titles": value(
+                "SELECT count(*) FROM (SELECT title FROM record "
+                "GROUP BY title HAVING count(DISTINCT page_id) > 1)"
+            ),
+            # (records of a page, number of pages with that many), for pages
+            # with more than one record
+            "records_per_page": rows(
+                "SELECT n, count(*) FROM (SELECT count(*) AS n FROM record "
+                "GROUP BY page_id HAVING n > 1) GROUP BY n ORDER BY n"
+            ),
+            # (records, page id, title of the newest revision)
+            "most_records": rows(
+                "SELECT count(*) AS n, page_id, "
+                "(SELECT title FROM record t WHERE t.page_id = r.page_id "
+                "ORDER BY revision DESC LIMIT 1) "
+                "FROM record r GROUP BY page_id HAVING n > 1 "
+                "ORDER BY n DESC, page_id LIMIT 5"
+            ),
+            # (file name, records, records with an older revision of their page)
+            "per_file": rows(
+                f"SELECT f.name, count(*), total(revision < newest) "
+                f"FROM record JOIN file f ON f.id = record.file_id "
+                f"JOIN {_NEWEST} USING (page_id) GROUP BY f.id ORDER BY f.id"
+            ),
+            # (oldest, newest) revision timestamp over all records
+            "modified": rows("SELECT min(modified), max(modified) FROM record")[0],
+            # (oldest, newest) revision timestamp over the records that make a
+            # page occur more than once: all but the oldest revision of it
+            "duplicates_modified": rows(
+                "SELECT min(modified), max(modified) FROM ("
+                "SELECT modified, row_number() OVER (PARTITION BY page_id "
+                "ORDER BY revision, file_id, member, line) AS k FROM record) "
+                "WHERE k > 1"
+            )[0],
+        }
 
 
 def parse_loc_spec(s: str) -> Tuple[int, int]:

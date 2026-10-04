@@ -122,6 +122,22 @@
     same file names and sizes. Use ~--page-index~ to put it elsewhere,
     or ~--no-dedupe~ to convert every record as is.
 
+    To check how such pages were handled, ~mw2slob dump-records build~
+    stores every record of the given dump files - page id, revision,
+    its timestamp, wikitext size and edit tags, title, and location -
+    in a SQLite file (by default next to the dump, e.g.
+    ~enwiki_namespace_0.records.sqlite~). ~mw2slob dump-records stats~
+    then summarizes it (how many pages occur more than once, how often,
+    in which files, when those revisions were made), and ~mw2slob
+    dump-records duplicates~ prints every record of each page that has
+    more than one, grouped by page, marking the one that gets converted
+    (as a table, or as CSV with ~--csv~):
+    #+BEGIN_SRC sh
+      mw2slob dump-records build enwiki_namespace_0_chunk_*.tar.gz
+      mw2slob dump-records stats enwiki_namespace_0.records.sqlite
+      mw2slob dump-records duplicates enwiki_namespace_0.records.sqlite | less -S
+    #+END_SRC
+
     Wikimedia Enterprise HTML Dumps are available only for some
     [[https://www.mediawiki.org/wiki/Manual:Namespace][namespaces]]. For most wikipedias the main namespace ~0~ - articles - is
     typically the only one of interest to most users. Wiktionaries, on the
