@@ -98,6 +98,10 @@ def cli_dump(args):
         else:
             dump_files.append(name)
     scrape_articles = [scrape.articles(couch_url, info) for couch_url in couch_urls]
+    page_index_path = None
+    if dump_files and not args.no_dedupe:
+        page_index_path = args.page_index or dump.default_page_index_path(dump_files)
+        dump.build_page_index(dump_files, page_index_path)
     dump_articles = dump.articles(
         dump_files,
         info,
@@ -106,6 +110,7 @@ def cli_dump(args):
         html_encoding=args.html_encoding,
         remove_embedded_bg=args.remove_embedded_bg,
         ensure_ext_image_urls=args.ensure_ext_image_urls,
+        page_index_path=page_index_path,
     )
     run(outname, info, itertools.chain(*scrape_articles, dump_articles), args)
 
@@ -346,6 +351,28 @@ def arg_parser():
         type=str,
         default=None,
         help="End spec: processing dump at this file:line",
+    )
+
+    parser_dump.add_argument(
+        "--page-index",
+        type=str,
+        help=(
+            "Path to the page index: a SQLite file recording each page's newest "
+            "revision, used to convert only that one when a dump contains a page "
+            "several times. Built by a first pass over all dump files if missing "
+            "or built from other dump files, and reused otherwise. "
+            "By default next to the first dump file, named after it without "
+            "the _chunk_N suffix and with .pages.sqlite extension"
+        ),
+    )
+
+    parser_dump.add_argument(
+        "--no-dedupe",
+        action="store_true",
+        help=(
+            "Convert every record, including older revisions of pages the dump "
+            "contains more than once (skips the page index)"
+        ),
     )
 
     parser_dump.set_defaults(func=cli_dump)

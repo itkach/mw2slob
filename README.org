@@ -111,6 +111,17 @@
     includes several filters (see [[./mw2slob/filters]]) that work well
     for most wikipedias and wiktionaries.
 
+    A dump can contain the same page more than once, at different
+    revisions. Before converting, ~mw2slob dump~ makes a quick first
+    pass over all given dump files and records each page's newest
+    revision in a page index (a SQLite file next to the first dump
+    file, e.g. ~enwiki_namespace_0.pages.sqlite~ for
+    ~enwiki_namespace_0_chunk_*.tar.gz~), then converts only that
+    revision of each page. The index is reused by later runs over the
+    same dump files; delete it after downloading a new dump with the
+    same file names and sizes. Use ~--page-index~ to put it elsewhere,
+    or ~--no-dedupe~ to convert every record as is.
+
     Wikimedia Enterprise HTML Dumps are available only for some
     [[https://www.mediawiki.org/wiki/Manual:Namespace][namespaces]]. For most wikipedias the main namespace ~0~ - articles - is
     typically the only one of interest to most users. Wiktionaries, on the
