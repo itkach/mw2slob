@@ -5,13 +5,14 @@
 # to mw2slob/MathJax/ for browser use.
 #
 # Usage: ./update-mathjax [destination]
-#   destination: path to mw2slob directory (default: ./mw2slob)
+#   destination: path to mw2slob directory (default: the mw2slob
+#   directory next to this script)
 
 set -e
 
-DEST="${1:-./mw2slob}/MathJax"
-MJX_PKG="mathjax"
 PROJECT_DIR="$(cd "$(dirname "$0")" && pwd)"
+DEST="${1:-$PROJECT_DIR/mw2slob}/MathJax"
+MJX_PKG="mathjax"
 
 echo "MathJax 4 update for mw2slob"
 echo "Destination: $DEST"
@@ -20,26 +21,16 @@ echo "Project directory: $PROJECT_DIR"
 # Create destination directory
 mkdir -p "$DEST"
 
-# Create package.json if it doesn't exist
-if [ ! -f "$PROJECT_DIR/package.json" ]; then
-  echo "Creating package.json..."
-  cat > "$PROJECT_DIR/package.json" << 'EOF'
-{
-  "name": "mw2slob",
-  "version": "1.0.0",
-  "description": "Create slob dictionary files from MediaWiki dumps",
-  "private": true
-}
-EOF
-fi
-
-# Install the prebuilt MathJax 4 package
+# Install the prebuilt MathJax 4 package into a temporary directory,
+# removed on exit, so the project has no npm files of its own
+NPM_DIR="$(mktemp -d "${TMPDIR:-/tmp}/update-mathjax.XXXXXX")"
+trap 'rm -rf "$NPM_DIR"' EXIT
+trap 'exit 1' INT TERM
 echo "Installing $MJX_PKG@4..."
-cd "$PROJECT_DIR"
-npm install "$MJX_PKG@4" 2>&1 | tail -3
+npm install --prefix "$NPM_DIR" --no-audit --no-fund "$MJX_PKG@4" 2>&1 | tail -3
 
 # Verify installation
-MJX_DIR="$PROJECT_DIR/node_modules/$MJX_PKG"
+MJX_DIR="$NPM_DIR/node_modules/$MJX_PKG"
 if [ ! -d "$MJX_DIR" ]; then
   echo "ERROR: $MJX_DIR does not exist" >&2
   exit 1
@@ -73,7 +64,7 @@ done
 # character blocks, from the font package mathjax depends on, so they
 # stay at the same version as tex-svg.js. The directory is replaced
 # rather than merged so chunks dropped by a new version don't linger.
-FONT_DIR="$PROJECT_DIR/node_modules/@mathjax/mathjax-newcm-font/svg/dynamic"
+FONT_DIR="$NPM_DIR/node_modules/@mathjax/mathjax-newcm-font/svg/dynamic"
 if [ ! -d "$FONT_DIR" ]; then
   echo "ERROR: $FONT_DIR does not exist" >&2
   exit 1
@@ -109,6 +100,21 @@ if [ "$PROJECT_DIR/mw2slob/MathJax/MediaWiki.js" -ef "$DEST/MediaWiki.js" ]; the
 else
   cp "$PROJECT_DIR/mw2slob/MathJax/MediaWiki.js" "$DEST/"
   echo "  Copied MediaWiki.js"
+fi
+
+# Record the installed package versions. The record is kept outside
+# mw2slob/MathJax/, whose contents go into every dictionary, and is
+# written only when updating the project's own copy, since it describes
+# that copy.
+VERSIONS="$(for pkg in mathjax @mathjax/mathjax-newcm-font; do
+  echo "$pkg@$(node -p 'require(process.argv[1]).version' "$NPM_DIR/node_modules/$pkg/package.json")"
+done)"
+echo ""
+echo "Installed versions:"
+echo "$VERSIONS" | sed 's/^/  /'
+if [ "$PROJECT_DIR/mw2slob/MathJax" -ef "$DEST" ]; then
+  echo "$VERSIONS" > "$PROJECT_DIR/mathjax/versions.txt"
+  echo "  Recorded in mathjax/versions.txt"
 fi
 
 echo ""

@@ -1,9 +1,0 @@
-{
-  "name": "mw2slob",
-  "version": "1.0.0",
-  "description": "Create slob dictionary files from MediaWiki dumps",
-  "private": true,
-  "dependencies": {
-    "mathjax": "^4.1.3"
-  }
-}
