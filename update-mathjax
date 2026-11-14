@@ -1,5 +1,5 @@
 #!/usr/bin/env sh
-# update-mathjax - Build MathJax 4 for mw2slob
+# update-mathjax - Install MathJax 4 for mw2slob
 #
 # This script installs MathJax 4 and copies the necessary files
 # to mw2slob/MathJax/ for browser use.
@@ -68,6 +68,20 @@ for ext in boldsymbol mhchem color cancel unicode; do
   cp "$MJX_DIR/input/tex/extensions/$ext.js" "$DEST/input/tex/extensions/"
   echo "  Copied input/tex/extensions/$ext.js"
 done
+
+# Copy the font chunks tex-svg.js loads on demand for less common
+# character blocks, from the font package mathjax depends on, so they
+# stay at the same version as tex-svg.js. The directory is replaced
+# rather than merged so chunks dropped by a new version don't linger.
+FONT_DIR="$PROJECT_DIR/node_modules/@mathjax/mathjax-newcm-font/svg/dynamic"
+if [ ! -d "$FONT_DIR" ]; then
+  echo "ERROR: $FONT_DIR does not exist" >&2
+  exit 1
+fi
+rm -rf "$DEST/fonts/mathjax-newcm-font/svg/dynamic"
+mkdir -p "$DEST/fonts/mathjax-newcm-font/svg"
+cp -R "$FONT_DIR" "$DEST/fonts/mathjax-newcm-font/svg/"
+echo "  Copied fonts/mathjax-newcm-font/svg/dynamic"
 
 # Copy texvc and wiki2jax extensions from mathjax/ directory
 if [ ! -f "$PROJECT_DIR/mathjax/extensions/texvc.js" ]; then
