@@ -89,8 +89,13 @@ if [ ! -f "$PROJECT_DIR/mw2slob/MathJax/MediaWiki.js" ]; then
   echo "ERROR: $PROJECT_DIR/mw2slob/MathJax/MediaWiki.js not found" >&2
   exit 1
 fi
-cp "$PROJECT_DIR/mw2slob/MathJax/MediaWiki.js" "$DEST/"
-echo "  Copied MediaWiki.js"
+# With the default destination the config is already in place
+if [ "$PROJECT_DIR/mw2slob/MathJax/MediaWiki.js" -ef "$DEST/MediaWiki.js" ]; then
+  echo "  MediaWiki.js already in place"
+else
+  cp "$PROJECT_DIR/mw2slob/MathJax/MediaWiki.js" "$DEST/"
+  echo "  Copied MediaWiki.js"
+fi
 
 echo ""
 echo "MathJax 4 update complete!"
