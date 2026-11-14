@@ -10,7 +10,7 @@
 set -e
 
 DEST="${1:-./mw2slob}/MathJax"
-MJX_PKG="@mathjax/src"
+MJX_PKG="mathjax"
 PROJECT_DIR="$(cd "$(dirname "$0")" && pwd)"
 
 echo "MathJax 4 update for mw2slob"
@@ -33,7 +33,7 @@ if [ ! -f "$PROJECT_DIR/package.json" ]; then
 EOF
 fi
 
-# Install MathJax 4 source package
+# Install the prebuilt MathJax 4 package
 echo "Installing $MJX_PKG@4..."
 cd "$PROJECT_DIR"
 npm install "$MJX_PKG@4" 2>&1 | tail -3
@@ -49,11 +49,11 @@ fi
 echo "Copying MathJax 4 files..."
 
 # Copy the tex-svg bundle (TeX input + SVG output)
-if [ ! -f "$MJX_DIR/bundle/tex-svg.js" ]; then
-  echo "ERROR: $MJX_DIR/bundle/tex-svg.js not found" >&2
+if [ ! -f "$MJX_DIR/tex-svg.js" ]; then
+  echo "ERROR: $MJX_DIR/tex-svg.js not found" >&2
   exit 1
 fi
-cp "$MJX_DIR/bundle/tex-svg.js" "$DEST/"
+cp "$MJX_DIR/tex-svg.js" "$DEST/"
 echo "  Copied tex-svg.js"
 
 # Copy the handful of TeX extensions that aren't compiled into
@@ -61,11 +61,11 @@ echo "  Copied tex-svg.js"
 # from a same-origin/relative path, offline.
 mkdir -p "$DEST/input/tex/extensions"
 for ext in boldsymbol mhchem color cancel unicode; do
-  if [ ! -f "$MJX_DIR/bundle/input/tex/extensions/$ext.js" ]; then
-    echo "ERROR: $MJX_DIR/bundle/input/tex/extensions/$ext.js not found" >&2
+  if [ ! -f "$MJX_DIR/input/tex/extensions/$ext.js" ]; then
+    echo "ERROR: $MJX_DIR/input/tex/extensions/$ext.js not found" >&2
     exit 1
   fi
-  cp "$MJX_DIR/bundle/input/tex/extensions/$ext.js" "$DEST/input/tex/extensions/"
+  cp "$MJX_DIR/input/tex/extensions/$ext.js" "$DEST/input/tex/extensions/"
   echo "  Copied input/tex/extensions/$ext.js"
 done
 

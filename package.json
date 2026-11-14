@@ -4,6 +4,6 @@
   "description": "Create slob dictionary files from MediaWiki dumps",
   "private": true,
   "dependencies": {
-    "@mathjax/src": "^4.1.3"
+    "mathjax": "^4.1.3"
   }
 }
